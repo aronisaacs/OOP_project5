@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
  * Throws IllegalArgumentException for unrecognized lines.
  * @see LineType
  * @see ParsedLine
- * @see StrictParsers
  * @author Aron Isaacs
  */
 public class LineTypeFactory {
