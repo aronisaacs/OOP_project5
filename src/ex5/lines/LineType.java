@@ -124,7 +124,7 @@ public enum LineType {
      * @param line The line to classify.
      * @return The corresponding LineType.
      * @throws IllegalArgumentException if the line does not match any known type or does not end with
-     *                                  the required characters.
+     * the required characters.
      */
     public static LineType classify(String line) {
         if (!(line.endsWith(";") || line.endsWith("{") || line.endsWith("}"))) {

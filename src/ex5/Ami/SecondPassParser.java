@@ -46,9 +46,9 @@ public class SecondPassParser {
 
 
     ///////////////////////////////// FOR FUTURE IMPLEMENTATION /////////////////////////////////
-    private void updateMethodSignature(ParsedLine method) {}
-    private void checkGlobalLine(ParsedLine line) {}
-    private void checkMethodLine(ParsedLine parsedLine) {}
+    private void updateMethodSignature(ParsedLine methodSignatureLine) {}
+    private void checkGlobalLine(ParsedLine globalLine) {}
+    private void checkMethodLine(ParsedLine methodLine) {}
 
 
 
