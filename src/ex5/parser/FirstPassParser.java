@@ -13,8 +13,6 @@ import java.util.List;
  * Handles method declarations, variable declarations, and scope management.
  * Throws SJavaParseException for syntax errors.
  * @see SJavaParseException
- * @see SymbolTable
- * @see MethodTable
  * @see ParsedLine
  * @see LineType
  * @author Aron Isaacs
