@@ -8,6 +8,12 @@ public class SecondPassParser {
     private final List<ParsedLine> methodSignatures;
     private final List<List<ParsedLine>> methodLines;
 
+	/**
+	 * Constructor for SecondPassParser.
+	 * @param globalLines List of global ParsedLines.
+	 * @param methodSignatures List of method signature ParsedLines.
+	 * @param methodLines List of lists of ParsedLines for each method.
+	 */
     public SecondPassParser(List<ParsedLine> globalLines, List<ParsedLine> methodSignatures ,
                             List<List<ParsedLine>> methodLines) {
         this.globalLines = globalLines;
@@ -15,12 +21,18 @@ public class SecondPassParser {
         this.methodLines = methodLines;
     }
 
+	/**
+	 * Parses the stored ParsedLines.
+	 */
     public void parse() {
         checkGlobalLines();
         updateMethodSignatures();
         checkMethodLines();
     }
 
+	/**
+	 * Updates method signatures.
+	 */
     private void updateMethodSignatures() {
         for (ParsedLine method : methodSignatures) {
             updateMethodSignature(method);
@@ -28,12 +40,18 @@ public class SecondPassParser {
 
     }
 
+	/**
+	 * Checks global lines.
+	 */
     private void checkGlobalLines() {
         for (ParsedLine line : globalLines) {
             checkGlobalLine(line);
         }
     }
 
+	/**
+	 * Checks method lines.
+	 */
     private void checkMethodLines() {
         for (List<ParsedLine> method : methodLines) {
             for (ParsedLine parsedLine : method) {

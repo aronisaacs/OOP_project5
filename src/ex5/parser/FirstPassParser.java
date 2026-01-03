@@ -27,9 +27,9 @@ public class FirstPassParser {
 
     /**
      * Constructor for FirstPassParser.
-     * @param globalLines list to store global variable declarations
-     * @param methodSignatures method table to populate
-     * @param methodLines list to store lines of each method
+     * @param globalLines list to store global lines
+     * @param methodSignatures method signature table to populate
+     * @param methodLines list to store the lines of each method (a list of lists of ParsedLines)
      */
     public FirstPassParser(List<ParsedLine> globalLines,
                            List<ParsedLine> methodSignatures,
@@ -48,11 +48,12 @@ public class FirstPassParser {
      */
     public void parse(List<String> codeLines) throws SJavaParseException {
         int lineNumber = 0;
+		// Iterate through each line, classify it, and handle it based on its type.
         for (String line : codeLines) {
             lineNumber ++;
-            LineType type = LineTypeFactory.classify(line);
-            ParsedLine parsedLine = type.parseStrict(line);
-            ClassifyLines(type, lineNumber, parsedLine);
+            LineType lineType = LineTypeFactory.classify(line);
+            ParsedLine parsedLine = lineType.parseStrict(line);
+            ClassifyLines(lineType, lineNumber, parsedLine);
         }
         if (currentScopeLevel != 0) {
             throw new SJavaParseException("Unmatched brackets at end of file");

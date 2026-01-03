@@ -11,6 +11,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ex5.parser.SJavaParseException.ParseExceptionHandler;
+
 /**
  * Entry point for the S-Java validator.
  * Usage: java Sjavac <source-file>
@@ -33,8 +35,10 @@ public class Sjavac {
         // 0 - Valid S-Java code
         // 1 - Invalid S-Java code (parsing error)
         // 2 - I/O error (file not found, etc.)
+		//todo maybe other exit codes for other errors?
         try {
-            parseFile(filePath);
+			List<String> lines = Files.readAllLines(Paths.get(filePath));
+            parseFile(lines);
         } catch (SJavaParseException e) {
             // Parsing error
             ParseExceptionHandler(e);
@@ -49,11 +53,10 @@ public class Sjavac {
     /*
         * Parses the S-Java source file at the given path.
         * @param filePath Path to the S-Java source file.
-        * @throws IOException If an I/O error occurs while reading the file.
         * @throws SJavaParseException If a parsing error occurs.
      */
-    private static void parseFile(String filePath) throws IOException {
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
+    private static void parseFile(List<String> lines) throws SJavaParseException {
+
         final List<ParsedLine> globalLines = new ArrayList<>();
         final List<ParsedLine> methodSignatures = new ArrayList<>();
         final List<List<ParsedLine>> methodLines = new ArrayList<>();
@@ -76,16 +79,7 @@ public class Sjavac {
         System.exit(0);
     }
 
-    /*
-        * Handles SJavaParseException by printing an error message and exiting with code 1.
-        * @param e The SJavaParseException that occurred.
-     */
-    private static void ParseExceptionHandler(SJavaParseException e) {
-        System.out.println("1"); // invalid
-        System.err.println("S-Java parse error: " + e.getMessage());
-        e.printStackTrace();
-        System.exit(0);
-    }
+
 
 }
 

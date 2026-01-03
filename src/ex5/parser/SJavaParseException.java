@@ -11,5 +11,16 @@ public class SJavaParseException extends RuntimeException {
     public SJavaParseException(String message) {
         super(message);
     }
+
+	/*
+	 * Handles SJavaParseException by printing an error message and exiting with code 1.
+	 * @param e The SJavaParseException that occurred.
+	 */
+	public static void ParseExceptionHandler(SJavaParseException e) {
+		System.out.println("1"); // invalid
+		System.err.println("S-Java parse error: " + e.getMessage());
+		e.printStackTrace();
+		System.exit(0);
+	}
 }
 

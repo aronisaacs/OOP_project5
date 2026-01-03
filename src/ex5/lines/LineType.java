@@ -118,28 +118,6 @@ public enum LineType {
         return parser.parse(line);
     }
 
-    /**
-     * Classifies the given line into one of the defined LineType enums based on regex matching.
-     * Lines must end with ';', '{', or '}' to be considered valid.
-     * @param line The line to classify.
-     * @return The corresponding LineType.
-     * @throws IllegalArgumentException if the line does not match any known type or does not end with
-     * the required characters.
-     */
-    public static LineType classify(String line) {
-        if (!(line.endsWith(";") || line.endsWith("{") || line.endsWith("}"))) {
-            throw new IllegalArgumentException("Line must end with ';', '{', or '}' → " + line);
-        }
-
-        for (LineType type : values()) {
-            if (type.pattern.matcher(line).matches()) {
-                return type;
-            }
-        }
-
-        throw new IllegalArgumentException("Unrecognized line: " + line);
-    }
-
     // Functional interface for strict parsing of lines.
     @FunctionalInterface
     private interface StrictParser {
