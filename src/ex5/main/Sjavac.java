@@ -43,7 +43,6 @@ public class Sjavac {
             // Parsing error
             ParseExceptionHandler(e);
         }
-
         catch (IOException e) {
             // I/O error
             IOExceptionHandler(e, filePath);

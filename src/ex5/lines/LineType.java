@@ -2,7 +2,7 @@ package ex5.lines;
 
 import java.util.regex.Pattern;
 import ex5.Ami.ParsedLine;
-import org.intellij.lang.annotations.Language;
+//import org.intellij.lang.annotations.Language;
 
 /**
  * Enum representing different types of lines in a simplified Java-like language.
@@ -28,60 +28,60 @@ public enum LineType {
     /**
      * Matches empty lines (whitespace only).
      */
-    EMPTY("^\\s*$", line -> null),
+    EMPTY("^\\s*$", (line, lineNumber) -> null),
 
     /**
      * Matches single-line comments starting with //, even with leading whitespace (which will throw an exception
      * in strict mode).
      */
-    COMMENT("^\\s*//.*$", line -> null),
+    COMMENT("^\\s*//.*$", (line, lineNumber) -> null),
 
     /**
      * Matches final variable declarations, e.g., "final int x = 5;".
      */
     FINAL_VAR_DECLARATION("^\\s*final\\s+(int|double|boolean|char|String)\\s+.+;\\s*$",
-            ParsedLine::parseFinalVarDeclaration),
+			ParsedLine::parseFinalVarDeclaration),
 
     /**
      * Matches non-final variable declarations, e.g., "int x;" or "String name = "Alice";".
      */
     NON_FINAL_VAR_DECLARATION("^\\s*(int|double|boolean|char|String)\\s+.+;\\s*$",
-            ParsedLine::parseNonFinalVarDeclaration),
+			ParsedLine::parseNonFinalVarDeclaration),
 
     /**
      * Matches method declarations, e.g., "void myMethod(int a) {".
      */
     METHOD_DECLARATION("^\\s*void\\s+[a-zA-Z]\\w*\\s*\\([^)]*\\)\\s*\\{\\s*$",
-            ParsedLine::parseMethodDeclaration),
+			ParsedLine::parseMethodDeclaration),
 
     /**
      * Matches if or while statements, e.g., "if (condition) {" or "while (condition) {".
      */
     IF_WHILE("^\\s*(if|while)\\s*\\(.*\\)\\s*\\{\\s*$",
-            ParsedLine::parseIfWhile),
+			ParsedLine::parseIfWhile),
 
     /**
      * Matches return statements, e.g., "return;".
      */
     RETURN("^\\s*return\\s*;\\s*$",
-            ParsedLine::parseReturn),
+			ParsedLine::parseReturn),
 
     /**
      * Matches closing brackets "}" possibly with leading/trailing whitespace.
      */
-    CLOSING_BRACKET("^\\s*}\\s*$", line -> null),
+    CLOSING_BRACKET("^\\s*}\\s*$", ParsedLine::parseClosingBracket),
 
     /**
      * Matches variable assignments, e.g., "x = 10;" or "a = 5, b = 6;".
      */
     VARIABLE_ASSIGNMENT("^\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+(\\s*,\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+)*\\s*;\\s*$",
-            ParsedLine::parseVariableAssignment),
+			ParsedLine::parseVariableAssignment),
 
     /**
      * Matches method calls, e.g., "myMethod(5, "test");".
      */
     METHOD_CALL("^\\s*[a-zA-Z]\\w*\\s*\\([^)]*\\)\\s*;\\s*$",
-            ParsedLine::parseMethodCall);
+			ParsedLine::parseMethodCall);
 
 
     // Regex pattern for matching lines of this type.
@@ -95,7 +95,7 @@ public enum LineType {
         * @param regex The regex pattern as a string.
         * @param parser The parser function to strictly parse lines of this type.
      */
-    LineType(@Language("RegExp") String regex, StrictParser parser) {
+    LineType(String regex, StrictParser parser) {
         this.pattern = Pattern.compile(regex);
         this.parser = parser;
     }
@@ -109,19 +109,21 @@ public enum LineType {
     }
 
     /**
-     * Strictly parses the given line according to this line type's parser.
-     * @param line The line to parse.
-     * @return A ParsedLine object representing the parsed line.
-     * @throws IllegalArgumentException if the line does not conform to the expected format.
-     */
-    public ParsedLine parseStrict(String line) {
-        return parser.parse(line);
+	 * Strictly parses the given line according to this line type's parser.
+	 *
+	 * @param line       The line to parse.
+	 * @param lineNumber The line number in the source file.
+	 * @return A ParsedLine object representing the parsed line.
+	 * @throws IllegalArgumentException if the line does not conform to the expected format.
+	 */
+    public ParsedLine parseStrict(String line, int lineNumber) {
+        return parser.parse(line, lineNumber);
     }
 
     // Functional interface for strict parsing of lines.
     @FunctionalInterface
     private interface StrictParser {
-        ParsedLine parse(String line);
+        ParsedLine parse(String line, int lineNumber);
     }
 
 }

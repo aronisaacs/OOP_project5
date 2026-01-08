@@ -19,9 +19,9 @@ import java.util.List;
  */
 public class FirstPassParser {
 
-    private  List<ParsedLine> globalLines;
-    private List<ParsedLine> methodSignatures;
-    private List<List<ParsedLine>> methodLines;
+    private final List<ParsedLine> globalLines;
+    private final List<ParsedLine> methodSignatures;
+    private final List<List<ParsedLine>> methodLines;
     private int currentScopeLevel = 0;
 
 
@@ -52,7 +52,7 @@ public class FirstPassParser {
         for (String line : codeLines) {
             lineNumber ++;
             LineType lineType = LineTypeFactory.classify(line);
-            ParsedLine parsedLine = lineType.parseStrict(line);
+            ParsedLine parsedLine = lineType.parseStrict(line, lineNumber);
             ClassifyLines(lineType, lineNumber, parsedLine);
         }
         if (currentScopeLevel != 0) {

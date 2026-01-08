@@ -25,8 +25,8 @@ public class SecondPassParser {
 	 * Parses the stored ParsedLines.
 	 */
     public void parse() {
+		updateMethodSignatures();
         checkGlobalLines();
-        updateMethodSignatures();
         checkMethodLines();
     }
 
