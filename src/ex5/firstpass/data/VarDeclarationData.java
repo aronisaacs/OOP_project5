@@ -23,6 +23,19 @@ public final class VarDeclarationData implements LineData {
 	public PrimitiveType getType() { return type; }
 	public List<Item> getItems() { return items; }
 
+	/**
+	 * This was used for debugging.
+	 * String representation of the variable declaration data.
+	 * @return string describing the variable declaration
+	 */
+	@Override
+	public String toString() {
+		return "VarDeclarationData{final=" + isFinal +
+				", type=" + type +
+				", items=" + items + "}";
+	}
+
+
 	public static final class Item {
 		private final String name;
 		private final String valueToken; // null if no initializer
