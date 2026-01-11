@@ -3,6 +3,7 @@ package ex5.lines;
 import java.util.regex.Pattern;
 import ex5.firstpass.ParsedLine;
 import ex5.firstpass.StrictParsers;
+import ex5.parser.SJavaParseException;
 //import org.intellij.lang.annotations.Language;
 
 /**
@@ -37,17 +38,8 @@ public enum LineType {
      */
     COMMENT("^\\s*//.*$", (line, lineNumber) -> null),
 
-    /**
-     * Matches final variable declarations, e.g., "final int x = 5;".
-     */
-    FINAL_VAR_DECLARATION("^\\s*final\\s+(int|double|boolean|char|String)\\s+.+;\\s*$",
-			StrictParsers::parseFinalVarDeclaration),
 
-    /**
-     * Matches non-final variable declarations, e.g., "int x;" or "String name = "Alice";".
-     */
-    NON_FINAL_VAR_DECLARATION("^\\s*(int|double|boolean|char|String)\\s+.+;\\s*$",
-			StrictParsers::parseNonFinalVarDeclaration),
+
 
     /**
      * Matches method declarations, e.g., "void myMethod(int a) {".
@@ -58,7 +50,7 @@ public enum LineType {
     /**
      * Matches if or while statements, e.g., "if (condition) {" or "while (condition) {".
      */
-    IF_WHILE("^\\s*(if|while)\\s*\\(.*\\)\\s*\\{\\s*$",
+    IF_WHILE("^\\s*(if|while)\\s*\\([^)]*\\)\\s*\\{\\s*$",
 			StrictParsers::parseIfWhile),
 
     /**
@@ -73,16 +65,30 @@ public enum LineType {
     CLOSING_BRACKET("^\\s*}\\s*$", StrictParsers::parseClosingBracket),
 
     /**
-     * Matches variable assignments, e.g., "x = 10;" or "a = 5, b = 6;".
-     */
-    VARIABLE_ASSIGNMENT("^\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+(\\s*,\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+)*\\s*;\\s*$",
-			StrictParsers::parseVariableAssignment),
-
-    /**
      * Matches method calls, e.g., "myMethod(5, "test");".
      */
     METHOD_CALL("^\\s*[a-zA-Z]\\w*\\s*\\([^)]*\\)\\s*;\\s*$",
-			StrictParsers::parseMethodCall);
+			StrictParsers::parseMethodCall),
+    /**
+     * Matches variable assignments, e.g., "x = 10;" or "a = 5, b = 6;".
+     */
+    VARIABLE_ASSIGNMENT(
+			"^\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+(\\s*,\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+)*\\s*;\\s*$",
+			StrictParsers::parseVariableAssignment),
+
+	/**
+	 * Matches final variable declarations, e.g., "final int x = 5;".
+	 */
+	FINAL_VAR_DECLARATION("^\\s*final\\s+\\w+\\s+.+;\\s*$",
+			StrictParsers::parseFinalVarDeclaration),
+
+	/**
+	 * Matches non-final variable declarations, e.g., "int x;" or "String name = "Alice";".
+	 * purposefully placed after FINAL_VAR_DECLARATION to ensure correct matching order.
+	 */
+	NON_FINAL_VAR_DECLARATION(
+			"^\\s*\\w+\\s+[A-Za-z]\\w*(\\s*=.*)?(\\s*,\\s*[A-Za-z]\\w*(\\s*=.*)?)*\\s*;\\s*$",
+			StrictParsers::parseNonFinalVarDeclaration);
 
 
     // Regex pattern for matching lines of this type.
@@ -117,14 +123,14 @@ public enum LineType {
 	 * @return A ParsedLine object representing the parsed line.
 	 * @throws IllegalArgumentException if the line does not conform to the expected format.
 	 */
-    public ParsedLine parseStrict(String line, int lineNumber) {
+    public ParsedLine parseStrict(String line, int lineNumber) throws SJavaParseException {
         return parser.parse(line, lineNumber);
     }
 
     // Functional interface for strict parsing of lines.
     @FunctionalInterface
     private interface StrictParser {
-        ParsedLine parse(String line, int lineNumber);
+        ParsedLine parse(String line, int lineNumber) throws SJavaParseException;
     }
 
 }

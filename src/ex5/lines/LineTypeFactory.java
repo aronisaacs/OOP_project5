@@ -1,6 +1,8 @@
 package ex5.lines;
 
 import ex5.firstpass.ParsedLine;
+import ex5.parser.SJavaParseException;
+
 import java.util.regex.Pattern;
 
 /**
@@ -20,9 +22,10 @@ public class LineTypeFactory {
      * @param line The line to classify.
      * @return The corresponding LineType.
      */
-    public static LineType classify(String line) {
+    public static LineType classify(String line) throws SJavaParseException {
+		line = line.trim();
 		if (!(line.endsWith(";") || line.endsWith("{") || line.endsWith("}"))) {
-			throw new IllegalArgumentException("Line must end with ';', '{', or '}' → " + line);
+			throw new SJavaParseException("Line must end with ';', '{', or '}' → " + line);
 		}
         for (LineType type : LineType.values()) {
             Pattern pattern = type.getPattern();
@@ -30,7 +33,7 @@ public class LineTypeFactory {
                 return type;
             }
         };
-        throw new IllegalArgumentException("Unrecognized line: " + line);
+        throw new SJavaParseException("Unrecognized line: " + line);
     }
 }
 

@@ -8,7 +8,7 @@ import java.util.List;
  * @author ron.stein
  */
 
-public class MethodCallData {
+public class MethodCallData implements LineData{
 	private final String methodName;
 	private final List<String> args;
 

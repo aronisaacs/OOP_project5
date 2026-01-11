@@ -75,7 +75,7 @@ public class Sjavac {
         System.out.println("2"); // I/O error
         System.err.println("Failed to read file: " + filePath);
         e.printStackTrace();
-        System.exit(0);
+        System.exit(2);
     }
 
 
