@@ -1,7 +1,8 @@
 package ex5.lines;
 
 import java.util.regex.Pattern;
-import ex5.Ami.ParsedLine;
+import ex5.firstpass.ParsedLine;
+import ex5.firstpass.StrictParsers;
 //import org.intellij.lang.annotations.Language;
 
 /**
@@ -40,48 +41,48 @@ public enum LineType {
      * Matches final variable declarations, e.g., "final int x = 5;".
      */
     FINAL_VAR_DECLARATION("^\\s*final\\s+(int|double|boolean|char|String)\\s+.+;\\s*$",
-			ParsedLine::parseFinalVarDeclaration),
+			StrictParsers::parseFinalVarDeclaration),
 
     /**
      * Matches non-final variable declarations, e.g., "int x;" or "String name = "Alice";".
      */
     NON_FINAL_VAR_DECLARATION("^\\s*(int|double|boolean|char|String)\\s+.+;\\s*$",
-			ParsedLine::parseNonFinalVarDeclaration),
+			StrictParsers::parseNonFinalVarDeclaration),
 
     /**
      * Matches method declarations, e.g., "void myMethod(int a) {".
      */
     METHOD_DECLARATION("^\\s*void\\s+[a-zA-Z]\\w*\\s*\\([^)]*\\)\\s*\\{\\s*$",
-			ParsedLine::parseMethodDeclaration),
+			StrictParsers::parseMethodDeclaration),
 
     /**
      * Matches if or while statements, e.g., "if (condition) {" or "while (condition) {".
      */
     IF_WHILE("^\\s*(if|while)\\s*\\(.*\\)\\s*\\{\\s*$",
-			ParsedLine::parseIfWhile),
+			StrictParsers::parseIfWhile),
 
     /**
      * Matches return statements, e.g., "return;".
      */
     RETURN("^\\s*return\\s*;\\s*$",
-			ParsedLine::parseReturn),
+			StrictParsers::parseReturn),
 
     /**
      * Matches closing brackets "}" possibly with leading/trailing whitespace.
      */
-    CLOSING_BRACKET("^\\s*}\\s*$", ParsedLine::parseClosingBracket),
+    CLOSING_BRACKET("^\\s*}\\s*$", StrictParsers::parseClosingBracket),
 
     /**
      * Matches variable assignments, e.g., "x = 10;" or "a = 5, b = 6;".
      */
     VARIABLE_ASSIGNMENT("^\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+(\\s*,\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+)*\\s*;\\s*$",
-			ParsedLine::parseVariableAssignment),
+			StrictParsers::parseVariableAssignment),
 
     /**
      * Matches method calls, e.g., "myMethod(5, "test");".
      */
     METHOD_CALL("^\\s*[a-zA-Z]\\w*\\s*\\([^)]*\\)\\s*;\\s*$",
-			ParsedLine::parseMethodCall);
+			StrictParsers::parseMethodCall);
 
 
     // Regex pattern for matching lines of this type.

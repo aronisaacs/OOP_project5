@@ -1,8 +1,8 @@
-package ex5.parser;
+package ex5.firstpass;
 
 import ex5.lines.LineTypeFactory;
 import ex5.lines.LineType;
-import ex5.Ami.ParsedLine;
+import ex5.parser.SJavaParseException;
 
 
 import java.util.ArrayList;

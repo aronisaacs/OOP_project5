@@ -1,6 +1,6 @@
 package ex5.lines;
 
-import ex5.Ami.ParsedLine;
+import ex5.firstpass.ParsedLine;
 import java.util.regex.Pattern;
 
 /**

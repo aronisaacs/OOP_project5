@@ -1,4 +1,6 @@
-package ex5.Ami;
+package ex5.secondpass;
+
+import ex5.firstpass.ParsedLine;
 
 import java.util.List;
 

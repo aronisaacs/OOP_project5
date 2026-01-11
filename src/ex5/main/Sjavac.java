@@ -1,8 +1,8 @@
 package ex5.main;
 
-import ex5.Ami.ParsedLine;
-import ex5.Ami.SecondPassParser;
-import ex5.parser.FirstPassParser;
+import ex5.firstpass.ParsedLine;
+import ex5.secondpass.SecondPassParser;
+import ex5.firstpass.FirstPassParser;
 import ex5.parser.SJavaParseException;
 
 import java.io.IOException;
