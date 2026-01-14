@@ -1,6 +1,6 @@
 package ex5.firstpass;
 
-import ex5.parser.SJavaParseException;
+import ex5.firstpass.SyntaxException;
 
 public enum PrimitiveType {
 		INT("int"),
@@ -17,12 +17,12 @@ public enum PrimitiveType {
 		public String getTypeName() {
 			return typeName;
 		}
-		public static PrimitiveType fromTypeName(String typeName) throws SJavaParseException {
+		public static PrimitiveType fromTypeName(String typeName) throws SyntaxException {
 			for (PrimitiveType type : PrimitiveType.values()){
 				if (type.getTypeName().equals(typeName)){
 					return type;
 				}
 			}
-			throw new SJavaParseException("Invalid primitive type: " + typeName);
+			throw new SyntaxException("Invalid primitive type: " + typeName);
 		}
 }

@@ -6,7 +6,7 @@ import ex5.firstpass.data.MethodCallData;
 import ex5.firstpass.data.ConditionData;
 import ex5.firstpass.data.VarDeclarationData;
 import ex5.firstpass.data.VarAssignData;
-import ex5.parser.SJavaParseException;
+import ex5.firstpass.SyntaxException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +30,10 @@ public final class StrictParsers {
 	 * @param line raw line string
 	 * @param lineNumber line number in the source file
 	 * @return a ParsedLine object representing the final variable declaration with declaration data
-	 * @throws SJavaParseException if the line does not conform to the expected format
+	 * @throws SyntaxException if the line does not conform to the expected format
 	 */
 	public static ParsedLine parseFinalVarDeclaration(String line, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String noSemi = stripTrailingSemicolon(line);
 		String afterFinal = stripLeadingKeyword(noSemi, "final");
@@ -65,24 +65,24 @@ public final class StrictParsers {
 		public String getRest() { return rest; }
 	}
 	private static TypeAndRest splitTypeAndRest(String s, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		int firstSpace = s.indexOf(' ');
 		if (firstSpace < 0) {
-			throw new SJavaParseException("Missing type/variables at line " + lineNumber);
+			throw new SyntaxException("Missing type/variables at line " + lineNumber);
 		}
 		String typeToken = s.substring(0, firstSpace).trim();
 		PrimitiveType type = PrimitiveType.fromTypeName(typeToken);
 
 		String rest = s.substring(firstSpace + 1).trim();
 		if (rest.isEmpty()) {
-			throw new SJavaParseException("Missing variable names at line " + lineNumber);
+			throw new SyntaxException("Missing variable names at line " + lineNumber);
 		}
 		return new TypeAndRest(type, rest);
 	}
 	private static List<VarDeclarationData.Item> parseVarItems(
 			String rest, int lineNumber, boolean isFinal)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String[] parts = rest.split("\\s*,\\s*");
 		List<VarDeclarationData.Item> items = new ArrayList<>();
@@ -91,7 +91,7 @@ public final class StrictParsers {
 			VarDeclarationData.Item item = parseSingleDeclItem(part, lineNumber);
 
 			if (isFinal && item.getValueToken() == null) {
-				throw new SJavaParseException(
+				throw new SyntaxException(
 						"Final variable must be initialized at line " + lineNumber);
 			}
 
@@ -102,28 +102,28 @@ public final class StrictParsers {
 
 
 	private static VarDeclarationData.Item parseSingleDeclItem(String part, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String p = part.trim();
 		if (p.isEmpty()) {
-			throw new SJavaParseException("Empty declaration item at line " + lineNumber);
+			throw new SyntaxException("Empty declaration item at line " + lineNumber);
 		}
 
 		String[] eqParts = p.split("\\s*=\\s*", -1);
 		if (eqParts.length > 2) {
-			throw new SJavaParseException("Multiple '=' in declaration at line " + lineNumber);
+			throw new SyntaxException("Multiple '=' in declaration at line " + lineNumber);
 		}
 
 		String name = eqParts[0].trim();
 		if (!IDENT_PATTERN.matcher(name).matches()) {
-			throw new SJavaParseException("Invalid variable name at line " + lineNumber);
+			throw new SyntaxException("Invalid variable name at line " + lineNumber);
 		}
 
 		String valueToken = null;
 		if (eqParts.length == 2) {
 			valueToken = eqParts[1].trim();
 			if (valueToken.isEmpty()) {
-				throw new SJavaParseException("Missing initializer at line " + lineNumber);
+				throw new SyntaxException("Missing initializer at line " + lineNumber);
 			}
 		}
 		return new VarDeclarationData.Item(name, valueToken);
@@ -136,10 +136,10 @@ public final class StrictParsers {
 	 * @param line raw line string
 	 * @param lineNumber line number in the source file
 	 * @return a ParsedLine object representing the non-final variable declaration with declaration data
-	 * @throws SJavaParseException if the line does not conform to the expected format
+	 * @throws SyntaxException if the line does not conform to the expected format
 	 */
 	public static ParsedLine parseNonFinalVarDeclaration(String line, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String noSemi = stripTrailingSemicolon(line);
 
@@ -152,7 +152,7 @@ public final class StrictParsers {
 
 
 	public static ParsedLine parseMethodDeclaration(String line, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String trimmed = line.trim();
 		// remove leading "void" and ending '{'
@@ -172,7 +172,7 @@ public final class StrictParsers {
 			for (String part : parts) {
 				Matcher pm = PARAM_PATTERN.matcher(part);
 				if (!pm.matches()) {
-					throw new SJavaParseException(
+					throw new SyntaxException(
 							"Invalid parameter syntax at line " + lineNumber);
 				}
 
@@ -198,10 +198,10 @@ public final class StrictParsers {
 	 * @param line raw line string
 	 * @param lineNumber line number in the source file
 	 * @return a ParsedLine object representing the if/while statement with condition data
-	 * @throws SJavaParseException if the line does not conform to the expected format
+	 * @throws SyntaxException if the line does not conform to the expected format
 	 */
 	public static ParsedLine parseIfWhile(String line, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String trimmed = line.trim();
 		boolean isWhile = trimmed.startsWith("while");
@@ -213,7 +213,7 @@ public final class StrictParsers {
 
 		String condition = withoutBrace.substring(openParen + 1, closeParen).trim();
 		if (condition.isEmpty()) {
-			throw new SJavaParseException("Empty condition at line " + lineNumber);
+			throw new SyntaxException("Empty condition at line " + lineNumber);
 		}
 
 		List<String> operands = new ArrayList<>();
@@ -228,12 +228,12 @@ public final class StrictParsers {
 			if (c == '&' || c == '|') {
 				// must be && or ||
 				if (i + 1 >= condition.length() || condition.charAt(i + 1) != c) {
-					throw new SJavaParseException("Invalid operator in condition at line " + lineNumber);
+					throw new SyntaxException("Invalid operator in condition at line " + lineNumber);
 				}
 
 				String operand = current.toString().trim();
 				if (operand.isEmpty()) {
-					throw new SJavaParseException("Empty operand in condition at line " + lineNumber);
+					throw new SyntaxException("Empty operand in condition at line " + lineNumber);
 				}
 				operands.add(operand);
 				current.setLength(0);
@@ -249,7 +249,7 @@ public final class StrictParsers {
 
 		String lastOperand = current.toString().trim();
 		if (lastOperand.isEmpty()) {
-			throw new SJavaParseException("Empty operand in condition at line " + lineNumber);
+			throw new SyntaxException("Empty operand in condition at line " + lineNumber);
 		}
 		operands.add(lastOperand);
 
@@ -262,13 +262,13 @@ public final class StrictParsers {
 	 * @param line raw line string
 	 * @param lineNumber line number in the source file
 	 * @return a ParsedLine object representing the return statement
-	 * @throws SJavaParseException if the line does not conform to the expected format
+	 * @throws SyntaxException if the line does not conform to the expected format
 	 */
 	public static ParsedLine parseReturn(String line, int lineNumber)
-			throws SJavaParseException{
+			throws SyntaxException{
 		String trimmedLine = line.trim();
 		if(!trimmedLine.equals("return;")) {
-			throw new SJavaParseException("Invalid return statement at line " + lineNumber);
+			throw new SyntaxException("Invalid return statement at line " + lineNumber);
 		}
 		return new ParsedLine(lineNumber, line, LineType.RETURN, null);
 	}
@@ -277,7 +277,7 @@ public final class StrictParsers {
 	}
 
 	public static ParsedLine parseVariableAssignment(String line, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String noSemi = stripTrailingSemicolon(line);
 
@@ -287,22 +287,22 @@ public final class StrictParsers {
 		for (String part : parts) {
 			String p = part.trim();
 			if (p.isEmpty()) {
-				throw new SJavaParseException("Empty assignment item at line " + lineNumber);
+				throw new SyntaxException("Empty assignment item at line " + lineNumber);
 			}
 
 			String[] eqParts = p.split("\\s*=\\s*", -1);
 			if (eqParts.length != 2) {
-				throw new SJavaParseException("Invalid assignment syntax at line " + lineNumber);
+				throw new SyntaxException("Invalid assignment syntax at line " + lineNumber);
 			}
 
 			String name = eqParts[0].trim();
 			String valueToken = eqParts[1].trim();
 
 			if (!IDENT_PATTERN.matcher(name).matches()) {
-				throw new SJavaParseException("Invalid variable name at line " + lineNumber);
+				throw new SyntaxException("Invalid variable name at line " + lineNumber);
 			}
 			if (valueToken.isEmpty()) {
-				throw new SJavaParseException("Missing assigned value at line " + lineNumber);
+				throw new SyntaxException("Missing assigned value at line " + lineNumber);
 			}
 
 			items.add(new VarAssignData.Item(name, valueToken));
@@ -319,10 +319,10 @@ public final class StrictParsers {
 	 * @param line the raw line string
 	 * @param lineNumber the line number in the source file
 	 * @return a ParsedLine object representing the method call
-	 * @throws SJavaParseException if the line does not conform to the expected format
+	 * @throws SyntaxException if the line does not conform to the expected format
 	 */
 	public static ParsedLine parseMethodCall(String line, int lineNumber)
-			throws SJavaParseException {
+			throws SyntaxException {
 
 		String withoutSemi = line.trim();
 		withoutSemi = withoutSemi.substring(0, withoutSemi.length() - 1).trim();
@@ -334,7 +334,7 @@ public final class StrictParsers {
 		String argsSection = withoutSemi.substring(openParen + 1, closeParen).trim();
 
 		if (!METHOD_NAME_PATTERN.matcher(methodName).matches()) {
-			throw new SJavaParseException("Invalid method name in call at line " + lineNumber);
+			throw new SyntaxException("Invalid method name in call at line " + lineNumber);
 		}
 
 		List<String> args = new ArrayList<>();
@@ -343,7 +343,7 @@ public final class StrictParsers {
 			for (String part : parts) {
 				String arg = part.trim();
 				if (arg.isEmpty()) {
-					throw new SJavaParseException("Empty argument in method call at line " + lineNumber);
+					throw new SyntaxException("Empty argument in method call at line " + lineNumber);
 				}
 				args.add(arg);
 			}

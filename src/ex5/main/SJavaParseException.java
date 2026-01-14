@@ -1,4 +1,4 @@
-package ex5.parser;
+package ex5.main;
 
 /**
  * Exception thrown for any parsing or validation failure in S-Java.
@@ -18,8 +18,8 @@ public class SJavaParseException extends RuntimeException {
 	 */
 	public static void ParseExceptionHandler(SJavaParseException e) {
 		System.out.println("1"); // invalid
-		System.err.println("S-Java parse error: " + e.getMessage());
-		e.printStackTrace();
+		System.err.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+//		e.printStackTrace();
 		System.exit(1);
 	}
 }

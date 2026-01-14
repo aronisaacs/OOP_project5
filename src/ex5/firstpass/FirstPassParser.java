@@ -2,7 +2,7 @@ package ex5.firstpass;
 
 import ex5.lines.LineTypeFactory;
 import ex5.lines.LineType;
-import ex5.parser.SJavaParseException;
+import ex5.firstpass.SyntaxException;
 
 
 import java.util.ArrayList;
@@ -11,8 +11,8 @@ import java.util.List;
 /**
  * First pass parser that processes the code lines to build symbol and method tables.
  * Handles method declarations, variable declarations, and scope management.
- * Throws SJavaParseException for syntax errors.
- * @see SJavaParseException
+ * Throws SyntaxException for syntax errors.
+ * @see SyntaxException
  * @see ParsedLine
  * @see LineType
  * @author Aron Isaacs
@@ -44,9 +44,9 @@ public class FirstPassParser {
      * Parses the given list of code lines.
      * Updates the symbol and method tables accordingly.
      * @param codeLines list of code lines to parse
-     * @throws SJavaParseException if a syntax error is encountered
+     * @throws SyntaxException if a syntax error is encountered
      */
-    public void parse(List<String> codeLines) throws SJavaParseException {
+    public void parse(List<String> codeLines) throws SyntaxException {
         int lineNumber = 0;
 		// Iterate through each line, classify it, and handle it based on its type.
         for (String line : codeLines) {
@@ -56,7 +56,7 @@ public class FirstPassParser {
             ClassifyLines(lineType, lineNumber, parsedLine);
         }
         if (currentScopeLevel != 0) {
-            throw new SJavaParseException("Unmatched brackets at end of file");
+            throw new SyntaxException("Unmatched brackets at end of file");
         }
     }
 
@@ -66,9 +66,9 @@ public class FirstPassParser {
      * @param type the type of the line
      * @param lineNumber the current line number
      * @param parsedLine the parsed representation of the line
-     * @throws SJavaParseException if a syntax error is encountered
+     * @throws SyntaxException if a syntax error is encountered
      */
-    private void ClassifyLines(LineType type, int lineNumber, ParsedLine parsedLine) {
+    private void ClassifyLines(LineType type, int lineNumber, ParsedLine parsedLine)  throws SyntaxException {
         //I think that the length of this function is acceptable given that it is a switch statement and each
         // case is relatively short.
         switch (type) {
@@ -79,7 +79,7 @@ public class FirstPassParser {
 
             case METHOD_DECLARATION:
                 if (currentScopeLevel != 0) {
-                    throw new SJavaParseException("Nested method declaration at line " + lineNumber);
+                    throw new SyntaxException("Nested method declaration at line " + lineNumber);
                 }
                 currentScopeLevel++;
                 methodSignatures.add(parsedLine);
@@ -90,7 +90,7 @@ public class FirstPassParser {
 
             case IF_WHILE:
                 if (currentScopeLevel == 0) {
-                    throw new SJavaParseException("if/while outside of method at line " + lineNumber);
+                    throw new SyntaxException("if/while outside of method at line " + lineNumber);
                 }
                 currentScopeLevel++;
                 methodLines.getLast().add(parsedLine);
@@ -100,7 +100,7 @@ public class FirstPassParser {
             case RETURN:
             case METHOD_CALL:
                 if (currentScopeLevel == 0) {
-                    throw new SJavaParseException(type + " not allowed in global scope at line " + lineNumber);
+                    throw new SyntaxException(type + " not allowed in global scope at line " + lineNumber);
                 }
                 methodLines.getLast().add(parsedLine);
                 break;
@@ -108,7 +108,7 @@ public class FirstPassParser {
 
             case CLOSING_BRACKET:
                 if (currentScopeLevel == 0) {
-                    throw new SJavaParseException("Unmatched closing bracket at line " + lineNumber);
+                    throw new SyntaxException("Unmatched closing bracket at line " + lineNumber);
                 }
                 currentScopeLevel--;
                 methodLines.getLast().add(parsedLine);

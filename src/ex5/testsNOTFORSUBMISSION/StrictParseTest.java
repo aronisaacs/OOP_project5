@@ -3,7 +3,7 @@ package ex5.testsNOTFORSUBMISSION;
 import ex5.lines.LineType;
 import ex5.lines.LineTypeFactory;
 import ex5.firstpass.ParsedLine;
-import ex5.parser.SJavaParseException;
+import ex5.main.SJavaParseException;
 
 public class StrictParseTest {
 	public static void main(String[] args) throws SJavaParseException {

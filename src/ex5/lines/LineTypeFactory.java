@@ -1,14 +1,15 @@
 package ex5.lines;
 
 import ex5.firstpass.ParsedLine;
-import ex5.parser.SJavaParseException;
+import ex5.firstpass.SyntaxException;
+
 
 import java.util.regex.Pattern;
 
 /**
  * Factory class to classify lines into their respective LineType.
  * Uses regex patterns defined in LineType enum to match lines.
- * Throws IllegalArgumentException for unrecognized lines.
+ * Throws SyntaxException for unrecognized lines.
  * @see LineType
  * @see ParsedLine
  * @author Aron Isaacs
@@ -18,14 +19,14 @@ public class LineTypeFactory {
     /**
      * Classifies a line into its corresponding LineType.
      * Iterates through all LineType values and matches the line against their patterns.
-     * @throws IllegalArgumentException if the line does not match any known LineType.
+     * @throws SyntaxException if the line does not match any known LineType.
      * @param line The line to classify.
      * @return The corresponding LineType.
      */
-    public static LineType classify(String line) throws SJavaParseException {
+    public static LineType classify(String line) throws SyntaxException {
 		line = line.trim();
 		if (!(line.endsWith(";") || line.endsWith("{") || line.endsWith("}"))) {
-			throw new SJavaParseException("Line must end with ';', '{', or '}' → " + line);
+			throw new SyntaxException("Line must end with ';', '{', or '}' → " + line);
 		}
         for (LineType type : LineType.values()) {
             Pattern pattern = type.getPattern();
@@ -33,7 +34,7 @@ public class LineTypeFactory {
                 return type;
             }
         };
-        throw new SJavaParseException("Unrecognized line: " + line);
+        throw new SyntaxException("Unrecognized line: " + line);
     }
 }
 

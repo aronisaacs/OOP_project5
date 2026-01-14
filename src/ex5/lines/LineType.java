@@ -3,7 +3,7 @@ package ex5.lines;
 import java.util.regex.Pattern;
 import ex5.firstpass.ParsedLine;
 import ex5.firstpass.StrictParsers;
-import ex5.parser.SJavaParseException;
+import ex5.firstpass.SyntaxException;
 //import org.intellij.lang.annotations.Language;
 
 /**
@@ -123,14 +123,14 @@ public enum LineType {
 	 * @return A ParsedLine object representing the parsed line.
 	 * @throws IllegalArgumentException if the line does not conform to the expected format.
 	 */
-    public ParsedLine parseStrict(String line, int lineNumber) throws SJavaParseException {
+    public ParsedLine parseStrict(String line, int lineNumber) throws SyntaxException {
         return parser.parse(line, lineNumber);
     }
 
     // Functional interface for strict parsing of lines.
     @FunctionalInterface
     private interface StrictParser {
-        ParsedLine parse(String line, int lineNumber) throws SJavaParseException;
+        ParsedLine parse(String line, int lineNumber) throws SyntaxException;
     }
 
 }
