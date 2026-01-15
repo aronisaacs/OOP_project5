@@ -20,7 +20,7 @@ public class SJavaParseException extends RuntimeException {
 		System.out.println("1"); // invalid
 		System.err.println(e.getClass().getSimpleName() + ": " + e.getMessage());
 //		e.printStackTrace();
-		System.exit(1);
+//		System.exit(1);
 	}
 }
 

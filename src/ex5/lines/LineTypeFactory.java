@@ -25,12 +25,14 @@ public class LineTypeFactory {
      */
     public static LineType classify(String line) throws SyntaxException {
 		line = line.trim();
-		if (!(line.endsWith(";") || line.endsWith("{") || line.endsWith("}"))) {
-			throw new SyntaxException("Line must end with ';', '{', or '}' → " + line);
-		}
         for (LineType type : LineType.values()) {
             Pattern pattern = type.getPattern();
             if (pattern != null && pattern.matcher(line).matches()) {
+				if (type != LineType.COMMENT && type != LineType.EMPTY){
+					if (!(line.endsWith(";") || line.endsWith("{") || line.endsWith("}"))) {
+						throw new SyntaxException("Line must end with ';', '{', or '}', got: " + line);
+					}
+				}
                 return type;
             }
         };

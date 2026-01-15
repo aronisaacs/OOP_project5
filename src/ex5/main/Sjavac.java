@@ -50,14 +50,14 @@ public class Sjavac {
 	private static void handleIOError(IOException e) {
 		System.out.println("2");
 		System.err.println("I/O Error, failed to read file: " + e.getMessage());
-		System.exit(2);
+//		System.exit(2);
 	}
 
 	private static void handleGeneralError(Exception e) {
 		System.out.println("2");
 		String message = e.getMessage() != null ? e.getMessage() : e.toString();
 		System.err.println( message);
-		System.exit(2);
+//		System.exit(2);
 	}
 
 	/*

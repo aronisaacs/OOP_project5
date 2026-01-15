@@ -5,6 +5,7 @@ import ex5.firstpass.PrimitiveType;
 import ex5.firstpass.data.*;
 import ex5.lines.LineType;
 import ex5.secondpass.SemanticException;
+import ex5.secondpass.MethodSymbol;
 
 import java.util.*;
 
@@ -99,9 +100,6 @@ public class SecondPassParser {
 	/**
 	 * Checks method lines.
 	 */
-	/**
-	 * Checks method lines.
-	 */
 	private void checkMethodLines() throws SemanticException {
 		for (List<ParsedLine> method : methodLines) {
 			//Only the global scope should be on the stack
@@ -131,44 +129,6 @@ public class SecondPassParser {
 			}
 		}
 	}
-	/** Represents a method symbol with its name and parameters. */
-	private static final class MethodSymbol {
-		private final String name;
-		private final List<Param> params;
-
-		private MethodSymbol(String name, List<Param> params) {
-			this.name = name;
-			this.params = params;
-		}
-
-		/**
-		 * Gets the method name from the symbol.
-		 * @return The method name.
-		 */
-		public String getName() { return name; }
-
-		/**
-		 * Gets the list of parameters for the method.
-		 * @return The list of parameters.
-		 */
-		public List<Param> getParams() { return params; }
-
-		private static final class Param {
-			private final PrimitiveType type;
-			private final boolean isFinal;
-			private final String name; // optional but useful
-
-			private Param(PrimitiveType type, boolean isFinal, String name) {
-				this.type = type;
-				this.isFinal = isFinal;
-				this.name = name;
-			}
-
-			public PrimitiveType getType() { return type; }
-			public boolean isFinal() { return isFinal; }
-			public String getName() { return name; }
-		}
-	}
 
     private void addGlobalLine(ParsedLine globalLine) {
 		if (globalLine == null) return;
@@ -195,7 +155,7 @@ public class SecondPassParser {
 		for (VarDeclarationData.Item i : data.getItems()) {
 			String name = i.getName();
 
-			// 1. Check for duplicate global variable names [cite: 108]
+			// 1. Check for duplicate global variable names
 			if (globalScope.containsKey(name)) {
 				throw new SemanticException("Duplicate global variable name '" + name + "'");
 			}
@@ -203,12 +163,10 @@ public class SecondPassParser {
 			boolean isInitialized = false;
 			String valueToken = i.getValueToken();
 
-			// 2. Handle Initialization [cite: 136, 142]
 			if (valueToken != null) {
 				validateValue(data.getType(), valueToken);
 				isInitialized = true;
 			} else if (data.isFinal()) {
-				// Final variables MUST be initialized at declaration [cite: 136]
 				throw new SemanticException("Final variable '" + name + "' not initialized");
 			}
 
@@ -283,14 +241,14 @@ public class SecondPassParser {
 			case INT:
 				return token.matches(INT_REGEX);
 			case DOUBLE:
-				// double accepts both double and int literals [cite: 99, 181]
+				// double accepts both double and int literals
 				return token.matches(DOUBLE_REGEX) || token.matches(INT_REGEX);
 			case STRING:
 				return token.matches(STRING_REGEX);
 			case CHAR:
 				return token.matches(CHAR_REGEX);
 			case BOOLEAN:
-				// boolean accepts true, false, or any numeric literal [cite: 99, 181]
+				// boolean accepts true, false, or any numeric literal
 				return token.matches(BOOLEAN_REGEX) ||
 						token.matches(DOUBLE_REGEX) ||
 						token.matches(INT_REGEX);
@@ -320,24 +278,17 @@ public class SecondPassParser {
 			case METHOD_CALL:
 				handleMethodCall((MethodCallData) methodLine.getData());
 				break;
-
 			case CLOSING_BRACKET:
-				// Pop the most recent scope [cite: 63, 186]
+				// Pop the most recent scope
 				if (scopeStack.size() <= 1) {
-					// This shouldn't happen if FirstPassParser is correct
 					throw new SemanticException("Unexpected closing bracket.");
 				}
 				scopeStack.pop();
 				break;
-
 			case RETURN:
-				// return; is already checked for syntax and location [cite: 209, 212]
 				break;
-
 			case METHOD_DECLARATION:
-				// Already handled as the starting point in checkMethodLines
 				break;
-
 			default:
 				break;
 		}
@@ -346,7 +297,7 @@ public class SecondPassParser {
 		Map<String, VariableSymbol> currentScope = scopeStack.peek();
 		for (VarDeclarationData.Item item : data.getItems()) {
 			String name = item.getName();
-			// Rule: Two local variables with same name cannot be in the same block [cite: 116]
+			//Two local variables with same name cannot be in the same block
 			if (currentScope.containsKey(name)) {
 				throw new SemanticException("Variable '" + name + "' already defined in this scope.");
 			}
@@ -356,48 +307,51 @@ public class SecondPassParser {
 				validateValue(data.getType(), item.getValueToken());
 				initialized = true;
 			} else if (data.isFinal()) {
-				throw new SemanticException("Final local variable must be initialized[cite: 136].");
+				throw new SemanticException("Final local variable must be initialized.");
 			}
 			currentScope.put(name, new VariableSymbol(data.getType(), data.isFinal(), initialized));
 		}
 	}
 
 	private void handleLocalAssignment(VarAssignData data) throws SemanticException {
+		Map<String, VariableSymbol> currentScope = scopeStack.peek();
 		for (VarAssignData.Item item : data.getItems()) {
 			VariableSymbol symbol = resolve(item.getName());
 			if (symbol == null) {
 				throw new SemanticException("Variable '" + item.getName() + "' undeclared.");
 			}
 			if (symbol.isFinal()) {
-				throw new SemanticException("Cannot reassign final variable[cite: 138].");
+				throw new SemanticException("Cannot reassign a final variable.");
 			}
 			validateValue(symbol.getType(), item.getValueToken());
-			symbol.setInitialized(true);
+			//we need to create a local version so we don't mutate the global one
+			VariableSymbol localUpdate = new
+					VariableSymbol(symbol.getType(), symbol.isFinal(), true);
+			currentScope.put(item.getName(), localUpdate);
 		}
 	}
 	private void handleIfWhile(ConditionData data) throws SemanticException {
-		// Rule: Conditions must be boolean compatible (boolean, int, or double) [cite: 236, 238, 239]
+		//Conditions must be boolean compatible
 		for (String operand : data.getOperands()) {
 			validateValue(PrimitiveType.BOOLEAN, operand);
 		}
-		// Push new scope for the block [cite: 118, 249]
 		scopeStack.push(new HashMap<>());
 	}
 	private void handleMethodCall(MethodCallData data) throws SemanticException {
 		MethodSymbol target = methodTable.get(data.getMethodName());
 		if (target == null) {
-			throw new SemanticException("Method '" + data.getMethodName() + "' not found[cite: 201].");
+			throw new SemanticException("Method '" + data.getMethodName() + "' not found.");
 		}
 
 		List<String> args = data.getArgs();
 		List<MethodSymbol.Param> params = target.getParams();
 
 		if (args.size() != params.size()) {
-			throw new SemanticException("Argument count mismatch for " + target.getName() + "[cite: 207].");
+			throw new SemanticException("Argument count mismatch for " + target.getName());
 		}
 
 		for (int i = 0; i < args.size(); i++) {
-			// Rule: Argument types must match parameter types (with widening) [cite: 206]
+			//Argument types must match parameter types
 			validateValue(params.get(i).getType(), args.get(i));
 		}
 	}
