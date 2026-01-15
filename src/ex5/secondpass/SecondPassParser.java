@@ -313,6 +313,7 @@ public class SecondPassParser {
 		}
 	}
 
+
 	private void handleLocalAssignment(VarAssignData data) throws SemanticException {
 		Map<String, VariableSymbol> currentScope = scopeStack.peek();
 		for (VarAssignData.Item item : data.getItems()) {
