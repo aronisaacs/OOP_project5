@@ -7,6 +7,11 @@ import ex5.main.SJavaParseException;
  * @author ron.stein
  */
 public class SemanticException extends SJavaParseException {
+
+	/**
+	 * Constructor for SemanticException.
+	 * @param message the detail message for the exception
+	 */
 	public SemanticException(String message) {
 		super(message);
 	}

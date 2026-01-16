@@ -6,21 +6,41 @@ import ex5.firstpass.data.MethodCallData;
 import ex5.firstpass.data.ConditionData;
 import ex5.firstpass.data.VarDeclarationData;
 import ex5.firstpass.data.VarAssignData;
-import ex5.firstpass.SyntaxException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Utility class providing strict parsing methods
+ * for different line types in the simplified Java-like language.
+ * Each method validates the syntax and extracts relevant data.
+ * @author ron.stein
+ */
 public final class StrictParsers {
+	//REGEX PATTERNS
 	private static final Pattern METHOD_NAME_PATTERN =
 			Pattern.compile("^[A-Za-z]\\w*$");
+	private static final String S_JAVA_IDENT = "(_[A-Za-z0-9]|[A-Za-z])\\w*";
 	private static final Pattern PARAM_PATTERN =
-			Pattern.compile("^\\s*(final\\s+)?(\\w+)\\s+([A-Za-z]\\w*)\\s*$");
+			Pattern.compile("^\\s*(final\\s+)?(\\w+)\\s+(" + S_JAVA_IDENT + ")\\s*$");
 	private static final Pattern IDENT_PATTERN =
-			Pattern.compile("^[A-Za-z]\\w*$");
+			Pattern.compile("^" + S_JAVA_IDENT + "$");
 
+	//CONSTANT REGEX STRINGS
+	private static final String RETURN_REGEX = "^\\s*return\\s*;\\s*$";
+	private static final String WHITESPACE_REGEX = "\\s*,\\s*";
+
+	//CONSTANT MESSAGES
+	private static final String INVALID_COMMENT_MESSAGE = "Invalid comment syntax at line ";
+	private static final String MISSING_VARIABLE_MESSAGE = "Missing type/variables at line ";
+	private static final String MISSING_VARIABLE_NAME_MESSAGE = "Missing variable names at line ";
+	private static final String FINAL_VARIABLE_MESSAGE = "Final variable must be initialized at line ";
+	private static final String EMPTY_DECLERATION_MESSAGE = "Empty declaration item at line ";
+
+	//CONSTANT STRING LITERALS
+	private static final String FINAL_LITERAL = "final";
+	private static final String COMMENT_LITERAL = "//";
 
 	private StrictParsers() {}
 
@@ -36,22 +56,49 @@ public final class StrictParsers {
 			throws SyntaxException {
 
 		String noSemi = stripTrailingSemicolon(line);
-		String afterFinal = stripLeadingKeyword(noSemi, "final");
+		String afterFinal = stripLeadingKeyword(noSemi, FINAL_LITERAL);
 
-		TypeAndRest tr = splitTypeAndRest(afterFinal, lineNumber);
+		TypeAndRest tr = splitTypeRest(afterFinal, lineNumber);
 		List<VarDeclarationData.Item> items = parseVarItems(tr.getRest(), lineNumber, true);
 
 		VarDeclarationData data = new VarDeclarationData(true, tr.getType(), items);
 		return new ParsedLine(lineNumber, line, LineType.FINAL_VAR_DECLARATION, data);
 	}
+
+	/**
+	 * Strips the trailing semicolon from a line.
+	 * @param line raw line string
+	 * @return the line without the trailing semicolon
+	 */
 	private static String stripTrailingSemicolon(String line) {
 		String t = line.trim();
 		return t.substring(0, t.length() - 1).trim(); // enum guarantees ';'
 	}
 
+	/**
+	 * Strips the leading keyword from a line.
+	 * @param s raw line string
+	 * @param keyword the leading keyword to strip
+	 * @return the line without the leading keyword
+	 */
 	private static String stripLeadingKeyword(String s, String keyword) {
 		return s.substring(keyword.length()).trim(); // enum guarantees prefix
 	}
+
+	/**
+	 * Parses a comment line.
+	 * @param line raw line string
+	 * @param lineNumber line number in the source file
+	 * @return ParsedLine object representing the comment line
+	 * @throws SyntaxException if the line does not conform to the expected format
+	 */
+	public static ParsedLine parseComment(String line, int lineNumber) throws SyntaxException {
+		if(!line.startsWith(COMMENT_LITERAL)){
+			throw new SyntaxException(INVALID_COMMENT_MESSAGE + lineNumber);
+		}
+		return new ParsedLine(lineNumber, line, LineType.COMMENT, null);
+	}
+
 	private static final class TypeAndRest {
 		private final PrimitiveType type;
 		private final String rest;
@@ -61,30 +108,60 @@ public final class StrictParsers {
 			this.rest = rest;
 		}
 
-		public PrimitiveType getType() { return type; }
-		public String getRest() { return rest; }
+		/**
+		 * Gets the primitive type.
+		 * @return the primitive type
+		 */
+		public PrimitiveType getType() {
+			return type;
+		}
+
+		/**
+		 * Gets the rest of the line after the type.
+		 * @return the rest of the line
+		 */
+		public String getRest() {
+			return rest;
+		}
 	}
-	private static TypeAndRest splitTypeAndRest(String s, int lineNumber)
+
+	/**
+	 * Splits the type and the rest of the line.
+	 * @param s the line string
+	 * @param lineNumber line number in the source file
+	 * @return a TypeAndRest object containing the primitive type and the rest of the line
+	 * @throws SyntaxException if the line does not conform to the expected format
+	 */
+	private static TypeAndRest splitTypeRest(String s, int lineNumber)
 			throws SyntaxException {
 
 		int firstSpace = s.indexOf(' ');
 		if (firstSpace < 0) {
-			throw new SyntaxException("Missing type/variables at line " + lineNumber);
+			throw new SyntaxException(MISSING_VARIABLE_MESSAGE + lineNumber);
 		}
 		String typeToken = s.substring(0, firstSpace).trim();
 		PrimitiveType type = PrimitiveType.fromTypeName(typeToken);
 
 		String rest = s.substring(firstSpace + 1).trim();
 		if (rest.isEmpty()) {
-			throw new SyntaxException("Missing variable names at line " + lineNumber);
+			throw new SyntaxException(MISSING_VARIABLE_NAME_MESSAGE + lineNumber);
 		}
 		return new TypeAndRest(type, rest);
 	}
+
+	/**
+	 * Parses variable declaration items from the rest of the line.
+	 * @param rest the rest of the line after the type
+	 * @param lineNumber line number in the source file
+	 * @param isFinal indicates if the variable is final
+	 * @return a list of VarDeclarationData.Item objects representing the variable declarations
+	 * @throws SyntaxException if the line does not conform to the expected format
+	 */
 	private static List<VarDeclarationData.Item> parseVarItems(
 			String rest, int lineNumber, boolean isFinal)
 			throws SyntaxException {
 
-		String[] parts = rest.split("\\s*,\\s*");
+		String[] parts = rest.split(WHITESPACE_REGEX);
 		List<VarDeclarationData.Item> items = new ArrayList<>();
 
 		for (String part : parts) {
@@ -92,7 +169,7 @@ public final class StrictParsers {
 
 			if (isFinal && item.getValueToken() == null) {
 				throw new SyntaxException(
-						"Final variable must be initialized at line " + lineNumber);
+						FINAL_VARIABLE_MESSAGE + lineNumber);
 			}
 
 			items.add(item);
@@ -100,13 +177,19 @@ public final class StrictParsers {
 		return items;
 	}
 
-
+	/**
+	 * Parses a single variable declaration item.
+	 * @param part the declaration item string
+	 * @param lineNumber line number in the source file
+	 * @return a VarDeclarationData.Item object representing the variable declaration
+	 * @throws SyntaxException if the item does not conform to the expected format
+	 */
 	private static VarDeclarationData.Item parseSingleDeclItem(String part, int lineNumber)
 			throws SyntaxException {
 
 		String p = part.trim();
 		if (p.isEmpty()) {
-			throw new SyntaxException("Empty declaration item at line " + lineNumber);
+			throw new SyntaxException(EMPTY_DECLERATION_MESSAGE + lineNumber);
 		}
 
 		String[] eqParts = p.split("\\s*=\\s*", -1);
@@ -143,14 +226,22 @@ public final class StrictParsers {
 
 		String noSemi = stripTrailingSemicolon(line);
 
-		TypeAndRest tr = splitTypeAndRest(noSemi, lineNumber); // validates PrimitiveType using fromTypeName
+		TypeAndRest tr = splitTypeRest(noSemi, lineNumber); // validates PrimitiveType using fromTypeName
 		List<VarDeclarationData.Item> items = parseVarItems(tr.getRest(), lineNumber, false);
 
 		VarDeclarationData data = new VarDeclarationData(false, tr.getType(), items);
 		return new ParsedLine(lineNumber, line, LineType.NON_FINAL_VAR_DECLARATION, data);
 	}
 
-
+	/**
+	 * Parses a method declaration line.
+	 * Extracts the method name and parameters,
+	 * and saves them in a MethodDeclarationData object.
+	 * @param line raw line string
+	 * @param lineNumber line number in the source file
+	 * @return a ParsedLine object representing the method declaration with method data
+	 * @throws SyntaxException if the line does not conform to the expected format
+	 */
 	public static ParsedLine parseMethodDeclaration(String line, int lineNumber)
 			throws SyntaxException {
 
@@ -199,7 +290,7 @@ public final class StrictParsers {
 	 * @param lineNumber line number in the source file
 	 * @return a ParsedLine object representing the if/while statement with condition data
 	 * @throws SyntaxException if the line does not conform to the expected format
-	 */
+	 */ //Method is too long
 	public static ParsedLine parseIfWhile(String line, int lineNumber)
 			throws SyntaxException {
 
@@ -266,16 +357,31 @@ public final class StrictParsers {
 	 */
 	public static ParsedLine parseReturn(String line, int lineNumber)
 			throws SyntaxException{
-		String trimmedLine = line.trim();
-		if(!trimmedLine.equals("return;")) {
+		if(!line.matches(RETURN_REGEX)) {
 			throw new SyntaxException("Invalid return statement at line " + lineNumber);
 		}
 		return new ParsedLine(lineNumber, line, LineType.RETURN, null);
 	}
+
+	/**
+	 * Parses a closing bracket line.
+	 * @param line the raw line string
+	 * @param lineNumber the line number in the source file
+	 * @return a ParsedLine object representing the closing bracket
+	 */
 	public static ParsedLine parseClosingBracket(String line, int lineNumber) {
 		return new ParsedLine(lineNumber, line, LineType.CLOSING_BRACKET, null);
 	}
 
+	/**
+	 * Parses a variable assignment line.
+	 * Extracts variable names and assigned values,
+	 * and saves them in a VarAssignData object.
+	 * @param line raw line string
+	 * @param lineNumber line number in the source file
+	 * @return a ParsedLine object representing the variable assignment with assignment data
+	 * @throws SyntaxException if the line does not conform to the expected format
+	 */
 	public static ParsedLine parseVariableAssignment(String line, int lineNumber)
 			throws SyntaxException {
 

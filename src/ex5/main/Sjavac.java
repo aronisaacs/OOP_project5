@@ -20,32 +20,32 @@ import static ex5.main.SJavaParseException.ParseExceptionHandler;
  */
 public class Sjavac {
 
-    /**
-     * Main method to run the S-Java validator.
-     * @param args Command line arguments; expects a single argument specifying the path to the S-Java source file.
-     */
-    public static void main(String[] args) {
+	/**
+	 * Main method to run the S-Java validator.
+	 *
+	 * @param args Command line arguments;
+	 *             expects a single argument specifying the path to the S-Java source file.
+	 */
+	public static void main(String[] args) {
 		try {
 			if (args.length != 1) {
-				throw new IllegalArgumentException("Usage Error: exactly one argument is required " +
-						"(java Sjavac <source-file>)");
+				throw new IllegalArgumentException("Usage Error: the number of arguments is invalid");
 			}
 			String filePath = args[0];
-			if(!filePath.endsWith(".sjava")) {
+			if (!filePath.endsWith(".sjava")) {
 				throw new IllegalArgumentException("Usage Error: the file must have a .sjava extension");
 			}
 			List<String> lines = Files.readAllLines(Paths.get(filePath));
 			parseFile(lines);
 			System.out.println("0");
 		} catch (SJavaParseException e) {
-            ParseExceptionHandler(e);
-        } catch (IllegalArgumentException e) {
-            // I/O error
-            handleGeneralError(e);
-        } catch (IOException e){
+			ParseExceptionHandler(e);
+		} catch (IllegalArgumentException e) {
+			handleGeneralError(e);
+		} catch (IOException e) {
 			handleIOError(e);
 		}
-    }
+	}
 
 	private static void handleIOError(IOException e) {
 		System.out.println("2");
@@ -56,24 +56,25 @@ public class Sjavac {
 	private static void handleGeneralError(Exception e) {
 		System.out.println("2");
 		String message = e.getMessage() != null ? e.getMessage() : e.toString();
-		System.err.println( message);
+		System.err.println(message);
+//		System.err.println(e.getMessage());
 //		System.exit(2);
 	}
 
 	/*
-        * Parses the S-Java source file at the given path.
-        * @param filePath Path to the S-Java source file.
-        * @throws SJavaParseException If a parsing error occurs.
-     */
-    private static void parseFile(List<String> lines) throws SJavaParseException {
+	 * Parses the S-Java source file at the given path.
+	 * @param filePath Path to the S-Java source file.
+	 * @throws SJavaParseException If a parsing error occurs.
+	 */
+	private static void parseFile(List<String> lines) throws SJavaParseException {
 
-        final List<ParsedLine> globalLines = new ArrayList<>();
-        final List<ParsedLine> methodSignatures = new ArrayList<>();
-        final List<List<ParsedLine>> methodLines = new ArrayList<>();
-        FirstPassParser firstPassParser = new FirstPassParser(globalLines, methodSignatures, methodLines);
-        firstPassParser.parse(lines);
-        SecondPassParser secondPassParser = new SecondPassParser(globalLines, methodSignatures, methodLines);
-        secondPassParser.parse();
-    }
+		final List<ParsedLine> globalLines = new ArrayList<>();
+		final List<ParsedLine> methodSignatures = new ArrayList<>();
+		final List<List<ParsedLine>> methodLines = new ArrayList<>();
+		FirstPassParser firstPassParser = new FirstPassParser(globalLines, methodSignatures, methodLines);
+		firstPassParser.parse(lines);
+		SecondPassParser secondPassParser = new SecondPassParser(globalLines, methodSignatures, methodLines);
+		secondPassParser.parse();
+	}
 }
 

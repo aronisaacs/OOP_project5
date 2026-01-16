@@ -7,6 +7,7 @@ import ex5.lines.LineType;
 import ex5.secondpass.SemanticException;
 import ex5.secondpass.MethodSymbol;
 
+
 import java.util.*;
 
 /**
@@ -203,7 +204,8 @@ public class SecondPassParser {
 				throw new SemanticException("Variable '" + token + "' used before initialization");
 			}
 			if (!isTypeCompatible(targetType, sourceVar.getType())) {
-				throw new SemanticException("Type mismatch: cannot assign " + sourceVar.getType() + " to " + targetType);
+				throw new SemanticException(
+						"Type mismatch: cannot assign " + sourceVar.getType() + " to " + targetType);
 			}
 			return;
 		}
@@ -314,50 +316,49 @@ public class SecondPassParser {
 	}
 
 
-	private void handleLocalAssignment(VarAssignData data) throws SemanticException {
-		Map<String, VariableSymbol> currentScope = scopeStack.peek();
-		for (VarAssignData.Item item : data.getItems()) {
-			VariableSymbol symbol = resolve(item.getName());
-			if (symbol == null) {
-				throw new SemanticException("Variable '" + item.getName() + "' undeclared.");
+		private void handleLocalAssignment(VarAssignData data) throws SemanticException {
+			Map<String, VariableSymbol> currentScope = scopeStack.peek();
+			for (VarAssignData.Item item : data.getItems()) {
+				VariableSymbol symbol = resolve(item.getName());
+				if (symbol == null) {
+					throw new SemanticException("Variable '" + item.getName() + "' undeclared.");
+				}
+				if (symbol.isFinal()) {
+					throw new SemanticException("Cannot reassign a final variable.");
+				}
+				validateValue(symbol.getType(), item.getValueToken());
+				//we need to create a local version so we don't mutate the global one
+				VariableSymbol localUpdate = new
+						VariableSymbol(symbol.getType(), symbol.isFinal(), true);
+				currentScope.put(item.getName(), localUpdate);
 			}
-			if (symbol.isFinal()) {
-				throw new SemanticException("Cannot reassign a final variable.");
+		}
+		private void handleIfWhile (ConditionData data) throws SemanticException {
+			//Conditions must be boolean compatible
+			for (String operand : data.getOperands()) {
+				validateValue(PrimitiveType.BOOLEAN, operand);
 			}
-			validateValue(symbol.getType(), item.getValueToken());
-			//we need to create a local version so we don't mutate the global one
-			VariableSymbol localUpdate = new
-					VariableSymbol(symbol.getType(), symbol.isFinal(), true);
-			currentScope.put(item.getName(), localUpdate);
+			scopeStack.push(new HashMap<>());
 		}
-	}
-	private void handleIfWhile(ConditionData data) throws SemanticException {
-		//Conditions must be boolean compatible
-		for (String operand : data.getOperands()) {
-			validateValue(PrimitiveType.BOOLEAN, operand);
-		}
-		scopeStack.push(new HashMap<>());
-	}
-	private void handleMethodCall(MethodCallData data) throws SemanticException {
-		MethodSymbol target = methodTable.get(data.getMethodName());
-		if (target == null) {
-			throw new SemanticException("Method '" + data.getMethodName() + "' not found.");
+		private void handleMethodCall (MethodCallData data) throws SemanticException {
+			MethodSymbol target = methodTable.get(data.getMethodName());
+			if (target == null) {
+				throw new SemanticException("Method '" + data.getMethodName() + "' not found.");
+			}
+
+			List<String> args = data.getArgs();
+			List<MethodSymbol.Param> params = target.getParams();
+
+			if (args.size() != params.size()) {
+				throw new SemanticException("Argument count mismatch for " + target.getName());
+			}
+
+			for (int i = 0; i < args.size(); i++) {
+				//Argument types must match parameter types
+				validateValue(params.get(i).getType(), args.get(i));
+			}
 		}
 
-		List<String> args = data.getArgs();
-		List<MethodSymbol.Param> params = target.getParams();
 
-		if (args.size() != params.size()) {
-			throw new SemanticException("Argument count mismatch for " + target.getName());
-		}
-
-		for (int i = 0; i < args.size(); i++) {
-			//Argument types must match parameter types
-			validateValue(params.get(i).getType(), args.get(i));
-		}
 	}
 
-
-
-
-}

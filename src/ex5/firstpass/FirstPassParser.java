@@ -51,7 +51,7 @@ public class FirstPassParser {
 		// Iterate through each line, classify it, and handle it based on its type.
         for (String line : codeLines) {
             lineNumber ++;
-            LineType lineType = LineTypeFactory.classify(line);
+            LineType lineType = LineTypeFactory.classify(line, lineNumber);
             ParsedLine parsedLine = lineType.parseStrict(line, lineNumber);
             ClassifyLines(lineType, lineNumber, parsedLine);
         }

@@ -3,13 +3,25 @@ package ex5.firstpass;
 import ex5.lines.LineType;
 import ex5.firstpass.data.LineData;
 
+/**
+ * Class representing a parsed line of code,
+ * including its line number, raw content,
+ * type, and any additional parsed data.
+ * @author Aron Isaacs
+ */
 public class ParsedLine {
 	private final int lineNumber;
 	private final String rawLine;
 	private final LineType type;
 	private final LineData data; // Placeholder for additional parsed data
 
-	//constructor
+	/**
+	 * Constructor for ParsedLine.
+	 * @param lineNumber the line number in the source code
+	 * @param rawLine the raw content of the line
+	 * @param type the type of the line
+	 * @param data additional parsed data specific to the line type
+	 */
 	public ParsedLine(int lineNumber, String rawLine, LineType type, LineData data) {
 		this.lineNumber = lineNumber;
 		this.rawLine = rawLine;
@@ -49,5 +61,4 @@ public class ParsedLine {
 	public LineData getData() {
 		return data;
 	}
-
 }
