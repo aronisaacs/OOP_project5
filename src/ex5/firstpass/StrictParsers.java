@@ -30,6 +30,8 @@ public final class StrictParsers {
 	//CONSTANT REGEX STRINGS
 	private static final String RETURN_REGEX = "^\\s*return\\s*;\\s*$";
 	private static final String WHITESPACE_REGEX = "\\s*,\\s*";
+	private static final String EQUAL_PARTS_REGEX = "\\s*=\\s*";
+	private static final String COMMA_SPLIT_REGEX = "\\s*,\\s*";
 
 	//CONSTANT MESSAGES
 	private static final String INVALID_COMMENT_MESSAGE = "Invalid comment syntax at line ";
@@ -37,10 +39,28 @@ public final class StrictParsers {
 	private static final String MISSING_VARIABLE_NAME_MESSAGE = "Missing variable names at line ";
 	private static final String FINAL_VARIABLE_MESSAGE = "Final variable must be initialized at line ";
 	private static final String EMPTY_DECLERATION_MESSAGE = "Empty declaration item at line ";
+	private static final String MULTIPLE_EQUALS_MESSAGE = "Multiple '=' in declaration at line ";
+	private static final String INVALID_VARIABLE_NAME_MESSAGE = "Invalid variable name at line ";
+	private static final String MISSING_INITIALIZER_MESSAGE = "Missing initializer at line ";
+	private static final String PARAMETER_SYNTAX_MESSAGE = "Invalid parameter syntax at line ";
+	private static final String EMPTY_CONDITION_MESSAGE = "Empty condition at line ";
+	private static final String INVALID_OPERATOR_MESSAGE = "Invalid operator in condition at line ";
+	private static final String EMPTY_OPERAND_MESSAGE = "Empty operand in condition at line ";
+	private static final String INVALID_RETURN_MESSAGE = "Invalid return statement at line ";
+	private static final String EMPTY_ASSIGNMENT_MESSAGE = "Empty assignment item at line ";
+	private static final String INVALID_ASSIGNMENT_SYNTAX_MESSAGE = "Invalid assignment syntax at line ";
+	private static final String MISSING_ASSIGNED_VALUE_MESSAGE = "Missing assigned value at line ";
+	private static final String INVALID_METHOD_NAME_MESSAGE = "Invalid method name in call at line ";
+	private static final String EMPTY_ARGUMENT_METHOD_MESSAGE = "Empty argument in method call at line ";
 
 	//CONSTANT STRING LITERALS
 	private static final String FINAL_LITERAL = "final";
 	private static final String COMMENT_LITERAL = "//";
+	private static final String VOID_LITERAL = "void";
+	private static final int ONE = 1;
+	private static final int TWO = 2;
+	private static final int THREE = 3;
+	private static final String WHILE_LITERAL = "while";
 
 	private StrictParsers() {}
 
@@ -192,21 +212,21 @@ public final class StrictParsers {
 			throw new SyntaxException(EMPTY_DECLERATION_MESSAGE + lineNumber);
 		}
 
-		String[] eqParts = p.split("\\s*=\\s*", -1);
+		String[] eqParts = p.split(EQUAL_PARTS_REGEX, -1);
 		if (eqParts.length > 2) {
-			throw new SyntaxException("Multiple '=' in declaration at line " + lineNumber);
+			throw new SyntaxException(MULTIPLE_EQUALS_MESSAGE + lineNumber);
 		}
 
 		String name = eqParts[0].trim();
 		if (!IDENT_PATTERN.matcher(name).matches()) {
-			throw new SyntaxException("Invalid variable name at line " + lineNumber);
+			throw new SyntaxException(INVALID_VARIABLE_NAME_MESSAGE + lineNumber);
 		}
 
 		String valueToken = null;
 		if (eqParts.length == 2) {
 			valueToken = eqParts[1].trim();
 			if (valueToken.isEmpty()) {
-				throw new SyntaxException("Missing initializer at line " + lineNumber);
+				throw new SyntaxException(MISSING_INITIALIZER_MESSAGE + lineNumber);
 			}
 		}
 		return new VarDeclarationData.Item(name, valueToken);
@@ -247,7 +267,7 @@ public final class StrictParsers {
 
 		String trimmed = line.trim();
 		// remove leading "void" and ending '{'
-		String afterVoid = trimmed.substring("void".length(), trimmed.length() - 1).trim();
+		String afterVoid = trimmed.substring(VOID_LITERAL.length(), trimmed.length() - 1).trim();
 
 		int openParen = afterVoid.indexOf('(');
 		int closeParen = afterVoid.lastIndexOf(')');
@@ -258,18 +278,18 @@ public final class StrictParsers {
 		List<MethodDeclarationData.ParamInfo> params = new ArrayList<>();
 
 		if (!paramsSection.isEmpty()) {
-			String[] parts = paramsSection.split("\\s*,\\s*");
+			String[] parts = paramsSection.split(COMMA_SPLIT_REGEX);
 
 			for (String part : parts) {
 				Matcher pm = PARAM_PATTERN.matcher(part);
 				if (!pm.matches()) {
 					throw new SyntaxException(
-							"Invalid parameter syntax at line " + lineNumber);
+							PARAMETER_SYNTAX_MESSAGE + lineNumber);
 				}
 
-				boolean isFinal = (pm.group(1) != null);
-				String typeToken = pm.group(2);
-				String paramName = pm.group(3);
+				boolean isFinal = (pm.group(ONE) != null);
+				String typeToken = pm.group(TWO);
+				String paramName = pm.group(THREE);
 
 				PrimitiveType type = PrimitiveType.fromTypeName(typeToken);
 
@@ -290,13 +310,15 @@ public final class StrictParsers {
 	 * @param lineNumber line number in the source file
 	 * @return a ParsedLine object representing the if/while statement with condition data
 	 * @throws SyntaxException if the line does not conform to the expected format
-	 */ //Method is too long
+	 */
+	/**
+	 * Parses an if or while line.
+	 */
 	public static ParsedLine parseIfWhile(String line, int lineNumber)
 			throws SyntaxException {
 
 		String trimmed = line.trim();
-		boolean isWhile = trimmed.startsWith("while");
-
+		boolean isWhile = trimmed.startsWith(WHILE_LITERAL);
 		String withoutBrace = trimmed.substring(0, trimmed.length() - 1).trim();
 
 		int openParen = withoutBrace.indexOf('(');
@@ -304,48 +326,53 @@ public final class StrictParsers {
 
 		String condition = withoutBrace.substring(openParen + 1, closeParen).trim();
 		if (condition.isEmpty()) {
-			throw new SyntaxException("Empty condition at line " + lineNumber);
+			throw new SyntaxException(EMPTY_CONDITION_MESSAGE + lineNumber);
 		}
+		ConditionData data = parseConditionContent(condition, isWhile, lineNumber);
+		return new ParsedLine(lineNumber, line, LineType.IF_WHILE, data);
+	}
 
+	/**
+	 * Helper method to split the condition string into operands and operators.
+	 */
+	private static ConditionData parseConditionContent(String condition, boolean isWhile, int lineNumber)
+			throws SyntaxException {
 		List<String> operands = new ArrayList<>();
 		List<String> operators = new ArrayList<>();
-
-		int i = 0;
 		StringBuilder current = new StringBuilder();
 
+		int i = 0;
 		while (i < condition.length()) {
 			char c = condition.charAt(i);
 
 			if (c == '&' || c == '|') {
-				// must be && or ||
 				if (i + 1 >= condition.length() || condition.charAt(i + 1) != c) {
-					throw new SyntaxException("Invalid operator in condition at line " + lineNumber);
+					throw new SyntaxException(INVALID_OPERATOR_MESSAGE + lineNumber);
 				}
 
-				String operand = current.toString().trim();
-				if (operand.isEmpty()) {
-					throw new SyntaxException("Empty operand in condition at line " + lineNumber);
-				}
-				operands.add(operand);
-				current.setLength(0);
-
+				addOperand(operands, current, lineNumber);
 				operators.add("" + c + c);
 				i += 2;
-				continue;
+			} else {
+				current.append(c);
+				i++;
 			}
-
-			current.append(c);
-			i++;
 		}
+		addOperand(operands, current, lineNumber); // Handle the final operand
+		return new ConditionData(isWhile, operands, operators);
+	}
 
-		String lastOperand = current.toString().trim();
-		if (lastOperand.isEmpty()) {
-			throw new SyntaxException("Empty operand in condition at line " + lineNumber);
+	/**
+	 * Helper to validate and add operands to the list.
+	 */
+	private static void addOperand(List<String> operands, StringBuilder current, int lineNumber)
+			throws SyntaxException {
+		String operand = current.toString().trim();
+		if (operand.isEmpty()) {
+			throw new SyntaxException(EMPTY_OPERAND_MESSAGE + lineNumber);
 		}
-		operands.add(lastOperand);
-
-		ConditionData data = new ConditionData(isWhile, operands, operators);
-		return new ParsedLine(lineNumber, line, LineType.IF_WHILE, data);
+		operands.add(operand);
+		current.setLength(0);
 	}
 
 	/**
@@ -358,7 +385,7 @@ public final class StrictParsers {
 	public static ParsedLine parseReturn(String line, int lineNumber)
 			throws SyntaxException{
 		if(!line.matches(RETURN_REGEX)) {
-			throw new SyntaxException("Invalid return statement at line " + lineNumber);
+			throw new SyntaxException(INVALID_RETURN_MESSAGE + lineNumber);
 		}
 		return new ParsedLine(lineNumber, line, LineType.RETURN, null);
 	}
@@ -386,29 +413,28 @@ public final class StrictParsers {
 			throws SyntaxException {
 
 		String noSemi = stripTrailingSemicolon(line);
-
-		String[] parts = noSemi.split("\\s*,\\s*");
+		String[] parts = noSemi.split(COMMA_SPLIT_REGEX);
 		List<VarAssignData.Item> items = new ArrayList<>();
 
 		for (String part : parts) {
 			String p = part.trim();
 			if (p.isEmpty()) {
-				throw new SyntaxException("Empty assignment item at line " + lineNumber);
+				throw new SyntaxException(EMPTY_ASSIGNMENT_MESSAGE + lineNumber);
 			}
 
 			String[] eqParts = p.split("\\s*=\\s*", -1);
 			if (eqParts.length != 2) {
-				throw new SyntaxException("Invalid assignment syntax at line " + lineNumber);
+				throw new SyntaxException(INVALID_ASSIGNMENT_SYNTAX_MESSAGE + lineNumber);
 			}
 
 			String name = eqParts[0].trim();
 			String valueToken = eqParts[1].trim();
 
 			if (!IDENT_PATTERN.matcher(name).matches()) {
-				throw new SyntaxException("Invalid variable name at line " + lineNumber);
+				throw new SyntaxException(INVALID_VARIABLE_NAME_MESSAGE + lineNumber);
 			}
 			if (valueToken.isEmpty()) {
-				throw new SyntaxException("Missing assigned value at line " + lineNumber);
+				throw new SyntaxException(MISSING_ASSIGNED_VALUE_MESSAGE + lineNumber);
 			}
 
 			items.add(new VarAssignData.Item(name, valueToken));
@@ -440,16 +466,16 @@ public final class StrictParsers {
 		String argsSection = withoutSemi.substring(openParen + 1, closeParen).trim();
 
 		if (!METHOD_NAME_PATTERN.matcher(methodName).matches()) {
-			throw new SyntaxException("Invalid method name in call at line " + lineNumber);
+			throw new SyntaxException(INVALID_METHOD_NAME_MESSAGE + lineNumber);
 		}
 
 		List<String> args = new ArrayList<>();
 		if (!argsSection.isEmpty()) {
-			String[] parts = argsSection.split("\\s*,\\s*");
+			String[] parts = argsSection.split(COMMA_SPLIT_REGEX); //"\\s*,\\s*"
 			for (String part : parts) {
 				String arg = part.trim();
 				if (arg.isEmpty()) {
-					throw new SyntaxException("Empty argument in method call at line " + lineNumber);
+					throw new SyntaxException(EMPTY_ARGUMENT_METHOD_MESSAGE + lineNumber);
 				}
 				args.add(arg);
 			}
@@ -458,7 +484,4 @@ public final class StrictParsers {
 		MethodCallData data = new MethodCallData(methodName, args);
 		return new ParsedLine(lineNumber, line, LineType.METHOD_CALL, data);
 	}
-
-
-
 }

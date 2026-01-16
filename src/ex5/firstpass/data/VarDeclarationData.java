@@ -29,30 +29,24 @@ public final class VarDeclarationData implements LineData {
 	 * Gets whether the variable is declared as final.
 	 * @return true if final, false otherwise
 	 */
-	public boolean isFinal() { return isFinal; }
+	public boolean isFinal() {
+		return isFinal;
+	}
 
 	/**
 	 * Gets the primitive type of the variable.
 	 * @return the variable's primitive type
 	 */
-	public PrimitiveType getType() { return type; }
+	public PrimitiveType getType() {
+		return type;
+	}
 
 	/**
 	 * Gets the list of variable items.
 	 * @return list of variable items
 	 */
-	public List<Item> getItems() { return items; }
-
-	/**
-	 * This was used for debugging.
-	 * String representation of the variable declaration data.
-	 * @return string describing the variable declaration
-	 */
-	@Override
-	public String toString() {
-		return "VarDeclarationData{final=" + isFinal +
-				", type=" + type +
-				", items=" + items + "}";
+	public List<Item> getItems() {
+		return items;
 	}
 
 	/**
@@ -77,12 +71,16 @@ public final class VarDeclarationData implements LineData {
 		 * Gets the name of the variable.
 		 * @return variable name
 		 */
-		public String getName() { return name; }
+		public String getName() {
+			return name;
+		}
 
 		/**
 		 * Gets the initializer token of the variable, or null if none.
 		 * @return initializer token or null
 		 */
-		public String getValueToken() { return valueToken; }
+		public String getValueToken() {
+			return valueToken;
+		}
 	}
 }
