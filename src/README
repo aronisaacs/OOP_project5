@@ -1,4 +1,79 @@
 ron.stein,aronisaacs
 209755958,342808292
 
-answers
+-Question: Describe the two main regular expressions you used in your code. For each regular expression,
+include an explanation of its structure, detailing the purpose of each component with the regex and how
+it contributes to the overall pattern.
+-Answer: There are dozens of regex expressions used in the code. We'll explain the flow of the code shortly,
+but a line is firstly divided into a factory that classifies what kind of line it is. There are ten
+types of LineTypes that we identified, we could easily go into the regex of each type, but we'll focus on
+two of the main/interesting ones we used. As a broad rule of thumb, lines are correlated to either methods or
+variables (there are exceptions to this such as comments and blank lines). So we'll focus on an example
+of each of these:
+1) Variable Assignment Regex:
+"^\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+(\\s*,\\s*[a-zA-Z_]\\w*\\s*=\\s*[^,;]+)*\\s*;\\s*$"
+This expression is designed to identify assignment lines, particularly those that may include multiple
+assignments on a single line.
+^\\s* and \\s*$: These anchors and whitespace tokens ensure the pattern validates the entire line, ignoring
+any leading or trailing indentation.
+[a-zA-Z_]\\w*: This matches the variable identifier. It allows the name to start with a letter or an
+underscore, followed by any word characters (letters, numbers, or underscores).
+\\s*=\\s*[^,;]+: This captures the assignment operator surrounded by optional spaces, followed by one or more
+characters that are not a comma or semicolon, representing the assigned value.
+(\\s*,\\s*...)*: This grouping, governed by the * quantifier, allows the pattern to match multiple
+comma-separated assignments within the same statement.
+;: This ensures the line ends with a mandatory semicolon, as required by s-Java syntax for assignments.
+2) Method Declaration Regex: "^\\s*void\\s+[a-zA-Z]\\w*\\s*\\([^)]*\\)\\s*\\{\\s*$"
+This expression is the primary tool for identifying the start of a method during the first pass.
+^\\s*void\\s+: Matches the mandatory void return type anchored at the start of the line, followed by at least
+one whitespace character.
+[a-zA-Z]\\w*: Validates the method name. Per s-Java rules, method names must start with a letter and cannot
+start with an underscore.
+\\s*\\([^)]*\\): This matches the parameter list enclosed in parentheses. The [^)]* component captures all
+characters until the closing parenthesis, allowing the parameter string to be extracted and parsed strictly
+later.
+\\s*\\{\\s*$: Confirms the line ends with an opening curly bracket, signaling the transition from
+scope into a new method scope.
+
+-Question: Additionally, explain the design choices, how you divided the responsibilities in the code.
+-Answer: Our primary architectural choice was the Two-Pass Parsing strategy, which allows methods to be
+called before they are declared in the source file. We divided responsibilities to ensure a clear separation
+of concerns.
+Factory Design Pattern: We implemented LineTypeFactory as the initial gateway for code classification. This
+decouples the identification of code types from the actual logic validation, allowing for a cleaner switch
+architecture in our parsers.
+Interface-Based Data Modeling: Ron implemented the LineData interface (e.g., ConditionData). This use of
+polymorphism allowed us to attach specialized metadata to a ParsedLine without the FirstPassParser needing to
+understand the internal details of that data.
+Divided Responsibilities: Aron focused on the structural logic, the Sjavac entry point, and the
+FirstPassParser (handling syntax and data structure creation). Ron focused on the semantic validation,
+implementing StrictParsers for granular string decomposition and the SecondPassParser logic. We used GitHub
+to manage our collaborative workflow, using branches to isolate features before merging.
+
+-Question: Briefly explain each module's roles.
+-Answer: A general overview of the code is that an Sjavac file is split into individual lines. For each line
+we classify it into a LineType using the LineTypeFactory. Then each line is passed to a strict parser that
+validates the syntax of the line and creates data structures that will be used in the second pass.
+In the second pass, the lines are grouped as global lines, method declaration lines, or method body lines.
+In the second pass, we maintain a container of Deque<Map<String, VariableSymbol>> to represent the scopes
+of the program. Each map in the deque represents a scope, with the deque itself functioning as a
+stack of scopes. As we process each line in the second pass, we validate it semantically using this scope
+structure, ensuring that variables are declared before use, methods are called with the correct parameters,
+and so on. We will go over the packages as they serve as the primary modules of the code:
+1) main: This package contains the Sjavac class, which serves as the entry point for the compiler. It
+orchestrates the overall compilation process, coordinating the first and second passes.
+2) firstpass: This package is responsible for the syntactic analysis of the s-Java code. It includes classes
+like FirstPassParser, which processes each line of code, validates its syntax using strict parsers, and
+creates the necessary data structures for the second pass. The LineTypeFactory class is also part of this
+package, classifying lines into specific LineType objects based on their content.
+3) secondpass: This package handles the semantic analysis of the s-Java code. It includes the
+SecondPassParser class, which validates the semantics of the code using the data structures created in the
+first pass. It ensures that variables and methods are used correctly according to the language rules.
+
+Also we'd like to mention the exception implementation in the program. Exceptions related to argument and
+file handling are managed in the main package within the Sjavac class. These are Java defined exceptions
+such as IOExceptions and IllegalArgumentExceptions. We then created the SJavaParseException class that serves
+as the base class for all parsing-related exceptions in our compiler. The SyntaxException and
+SemanticException extend the SJavaParseException class. The SyntaxExceptions are used in the first pass, and
+the Semantic Exceptions are used in the second pass. Of course, for each individual error a relevant
+message and line number if needed are provided in the message.

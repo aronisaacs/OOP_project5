@@ -133,7 +133,8 @@ public class FirstPassParser {
 	/**
 	 * Handles code that is strictly prohibited in the global scope.
 	 */
-	private void handleMethodInternalLine(ParsedLine parsedLine, LineType type, int lineNumber) throws SyntaxException {
+	private void handleMethodInternalLine(ParsedLine parsedLine, LineType type, int lineNumber)
+			throws SyntaxException {
 		if (currentScopeLevel == 0) {
 			throw new SyntaxException(type + NOT_ALLOWED_GLOBAL_MESSAGE + lineNumber);
 		}

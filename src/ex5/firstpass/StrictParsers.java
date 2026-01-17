@@ -61,6 +61,8 @@ public final class StrictParsers {
 	private static final int TWO = 2;
 	private static final int THREE = 3;
 	private static final String WHILE_LITERAL = "while";
+	private static final String AND_OPERATOR = "&&";
+	private static final String OR_OPERATOR = "||";
 
 	private StrictParsers() {}
 
@@ -311,9 +313,6 @@ public final class StrictParsers {
 	 * @return a ParsedLine object representing the if/while statement with condition data
 	 * @throws SyntaxException if the line does not conform to the expected format
 	 */
-	/**
-	 * Parses an if or while line.
-	 */
 	public static ParsedLine parseIfWhile(String line, int lineNumber)
 			throws SyntaxException {
 
@@ -351,7 +350,11 @@ public final class StrictParsers {
 				}
 
 				addOperand(operands, current, lineNumber);
-				operators.add("" + c + c);
+				if (c == '&') {
+					operators.add(AND_OPERATOR);
+				} else {
+					operators.add(OR_OPERATOR);
+				}
 				i += 2;
 			} else {
 				current.append(c);
@@ -421,8 +424,7 @@ public final class StrictParsers {
 			if (p.isEmpty()) {
 				throw new SyntaxException(EMPTY_ASSIGNMENT_MESSAGE + lineNumber);
 			}
-
-			String[] eqParts = p.split("\\s*=\\s*", -1);
+			String[] eqParts = p.split(EQUAL_PARTS_REGEX, -1);
 			if (eqParts.length != 2) {
 				throw new SyntaxException(INVALID_ASSIGNMENT_SYNTAX_MESSAGE + lineNumber);
 			}

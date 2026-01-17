@@ -42,6 +42,7 @@ public class MethodDeclarationData implements LineData {
 	/**
 	 * Data class representing a method parameter
 	 * with its finality, type, and name.
+	 * @author ron.stein
 	 */
 	public static final class ParamInfo {
 		private final boolean isFinal;
@@ -64,18 +65,24 @@ public class MethodDeclarationData implements LineData {
 		 * Checks if the parameter is final.
 		 * @return true if final, false otherwise
 		 */
-		public boolean isFinal() { return isFinal; }
+		public boolean isFinal() {
+			return isFinal;
+		}
 
 		/**
 		 * Gets the primitive type of the parameter.
 		 * @return the primitive type
 		 */
-		public PrimitiveType getType() { return type; }
+		public PrimitiveType getType() {
+			return type;
+		}
 
 		/**
 		 * Gets the name of the parameter.
 		 * @return the parameter name
 		 */
-		public String getName() { return name; }
+		public String getName() {
+			return name;
+		}
 	}
 }

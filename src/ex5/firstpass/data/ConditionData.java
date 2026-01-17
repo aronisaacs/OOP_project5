@@ -30,7 +30,9 @@ public final class ConditionData implements LineData {
 	 * Gets the list of operands in the condition.
 	 * @return list of operand strings
 	 */
-	public List<String> getOperands() { return operands; }
+	public List<String> getOperands() {
+		return operands;
+	}
 //	public List<String> getOperators() { return operators; }
 //	public boolean isWhile() { return isWhile; }
 }

@@ -26,16 +26,22 @@ public class MethodSymbol {
 	 * Getters.
 	 * @return method name and parameters
 	 */
-	public String getName() { return name; }
+	public String getName() {
+		return name;
+	}
 
 	/**
 	 * Getters.
 	 * @return list of parameters
 	 */
-	public List<Param> getParams() { return params; }
+	public List<Param> getParams() {
+		return params;
+	}
 
 	/**
 	 * Nested class representing a single parameter.
+	 * Each parameter has a type, a final modifier, and a name.
+	 * @author ron.stein
 	 */
 	public static final class Param {
 		private final PrimitiveType type;
@@ -58,18 +64,24 @@ public class MethodSymbol {
 		 * Getters.
 		 * @return parameter type, final modifier, and name
 		 */
-		public PrimitiveType getType() { return type; }
+		public PrimitiveType getType() {
+			return type;
+		}
 
 		/**
 		 * Getters.
 		 * @return whether the parameter is final
 		 */
-		public boolean isFinal() { return isFinal; }
+		public boolean isFinal() {
+			return isFinal;
+		}
 
 		/**
 		 * Getters.
 		 * @return parameter name
 		 */
-		public String getName() { return name; }
+		public String getName() {
+			return name;
+		}
 	}
 }

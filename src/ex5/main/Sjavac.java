@@ -1,45 +1,50 @@
 package ex5.main;
 
 import ex5.firstpass.ParsedLine;
-import ex5.firstpass.SyntaxException;
 import ex5.secondpass.SecondPassParser;
 import ex5.firstpass.FirstPassParser;
-import ex5.secondpass.SemanticException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import static ex5.main.SJavaParseException.ParseExceptionHandler;
+import static ex5.main.SJavaParseException.parseExceptionHandler;
 
 /**
- * Entry point for the S-Java validator.
- * Usage: java Sjavac <source-file>
+ * Main class for the S-Java compiler.
+ * Validates S-Java source files for syntax and semantic correctness.
+ * Exits with code 0 if valid, 1 for parse errors, and 2 for I/O or usage errors.
+ * @author ron.stein
  */
 public class Sjavac {
 
+	private static final String USAGE_ERROR_MESSAGE = "Usage Error: the number of arguments is invalid";
+	private static final String SJAVA_ENDING = ".sjava";
+	private static final String SJAVA_EXTENSION_ERROR_MESSAGE =
+			"Usage Error: the file must have a .sjava extension";
+	private static final String IO_ERROR_MESSAGE = "I/O Error, failed to read file: ";
+	private static final String TWO_LITERAL = "2";
+	private static final String ZERO_LITERAL = "0";
+
 	/**
 	 * Main method to run the S-Java validator.
-	 *
 	 * @param args Command line arguments;
-	 *             expects a single argument specifying the path to the S-Java source file.
+	 * should contain exactly one argument: the path to the S-Java source file.
 	 */
 	public static void main(String[] args) {
 		try {
 			if (args.length != 1) {
-				throw new IllegalArgumentException("Usage Error: the number of arguments is invalid");
+				throw new IllegalArgumentException(USAGE_ERROR_MESSAGE);
 			}
 			String filePath = args[0];
-			if (!filePath.endsWith(".sjava")) {
-				throw new IllegalArgumentException("Usage Error: the file must have a .sjava extension");
+			if (!filePath.endsWith(SJAVA_ENDING)) {
+				throw new IllegalArgumentException(SJAVA_EXTENSION_ERROR_MESSAGE);
 			}
 			List<String> lines = Files.readAllLines(Paths.get(filePath));
 			parseFile(lines);
-			System.out.println("0");
+			System.out.println(ZERO_LITERAL);
 		} catch (SJavaParseException e) {
-			ParseExceptionHandler(e);
+			parseExceptionHandler(e);
 		} catch (IllegalArgumentException e) {
 			handleGeneralError(e);
 		} catch (IOException e) {
@@ -47,24 +52,27 @@ public class Sjavac {
 		}
 	}
 
+	/**
+	 * Handles IOExceptions by printing an error message and exiting with code 2.
+	 */
 	private static void handleIOError(IOException e) {
-		System.out.println("2");
-		System.err.println("I/O Error, failed to read file: " + e.getMessage());
-//		System.exit(2);
+		System.out.println(TWO_LITERAL);
+		System.err.println(IO_ERROR_MESSAGE + e.getMessage());
 	}
 
+	/**
+	 * Handles general exceptions by printing an error message and exiting with code 2.
+	 */
 	private static void handleGeneralError(Exception e) {
-		System.out.println("2");
+		System.out.println(TWO_LITERAL);
 		String message = e.getMessage() != null ? e.getMessage() : e.toString();
 		System.err.println(message);
-//		System.err.println(e.getMessage());
-//		System.exit(2);
 	}
 
-	/*
+	/**
 	 * Parses the S-Java source file at the given path.
-	 * @param filePath Path to the S-Java source file.
-	 * @throws SJavaParseException If a parsing error occurs.
+	 * @param lines List of lines from the S-Java source file.
+	 * @throws SJavaParseException if a syntax or semantic error is found.
 	 */
 	private static void parseFile(List<String> lines) throws SJavaParseException {
 

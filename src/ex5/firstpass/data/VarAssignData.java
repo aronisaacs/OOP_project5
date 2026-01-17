@@ -22,11 +22,14 @@ public final class VarAssignData implements LineData {
 	 * Gets the list of variable assignment items.
 	 * @return list of Item objects
 	 */
-	public List<Item> getItems() { return items; }
+	public List<Item> getItems() {
+		return items;
+	}
 
 	/**
 	 * Data class representing a single variable assignment item
 	 * with its name and value token.
+	 * @author ron.stein
 	 */
 	public static final class Item {
 		private final String name;
@@ -46,12 +49,16 @@ public final class VarAssignData implements LineData {
 		 * Gets the name of the variable.
 		 * @return variable name
 		 */
-		public String getName() { return name; }
+		public String getName() {
+			return name;
+		}
 
 		/**
 		 * Gets the token representing the value assigned to the variable.
 		 * @return value token
 		 */
-		public String getValueToken() { return valueToken; }
+		public String getValueToken() {
+			return valueToken;
+		}
 	}
 }
